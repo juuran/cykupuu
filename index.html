@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>testi cytoscape</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"
+        integrity="sha512-xpXUCbrkyJCwC5noJXZqec9rSXdRgFfDoL7Q9/pCPe54Y04OlqwPobMcNuA5NPJ7DRR51OIr6xcOH2wUspyKDQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
+</head>
+
+<body>
+    <div id="cy"></div>
+    <!-- page content -->
+</body>
+<script>
+
+    /*
+        Kaikki tämän yllä on vain turhaa höystettä, joka johtuu laiskuudesta!
+
+
+
+
+    */
+
+    var sukupuuNoodit;
+
+    function syotaData() {
+        sukupuuNoodit = [
+            { data: { id: 'juuso', parent: undefined }, position: { x: 400, y: 100 } },
+            { data: { id: 'vilma', parent: undefined }, position: { x: 600, y: 100 } },
+            { data: { id: 'perhe', parent: undefined }, position: { x: 500, y: 100 } },
+            { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' } },
+            { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' } },
+            { data: { id: 'sulo', parent: '' }, position: { x: 350, y: 300 } },
+            { data: { id: 'oole', parent: '' }, position: { x: 450, y: 300 } },
+            { data: { id: 'julius', parent: '' }, position: { x: 550, y: 300 } },
+            { data: { id: 'miiki', parent: '' }, position: { x: 650, y: 300 } },
+            { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' } },
+            { data: { id: 'perheOole', source: 'perhe', target: 'oole' } },
+            { data: { id: 'perheJulius', source: 'perhe', target: 'julius' } },
+            { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' } }
+        ]
+    }
+
+    var cy = cytoscape({
+        container: document.getElementById('cy'), // container to render in
+        elements: [],
+
+        style: [ // the stylesheet for the graph
+            {
+                selector: 'node',
+                style: {
+                    'background-color': '#666',
+                    'label': 'data(id)'
+                }
+            },
+
+            {
+                selector: 'edge',
+                style: {
+                    'width': 3,
+                    'line-color': '#ccc',
+                    'target-arrow-color': '#ccc',
+                    'target-arrow-shape': 'triangle',
+                    'curve-style': 'bezier'
+                }
+            }
+        ],
+
+        layout: {
+            name: 'grid',
+            rows: 1
+        },
+
+        // options
+        zoom: 1,
+        wheelSensitivity: 0.25
+    });
+
+    window.onload = () => {
+        syotaData();
+        cy.add(sukupuuNoodit);
+    }
+
+    /*
+
+
+
+
+        Turha höyste jatkuu.
+    */
+
+</script>
+
+</html>
