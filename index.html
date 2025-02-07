@@ -66,60 +66,6 @@
         maxZoom: 4
     });
 
-    class Data {
-        constructor(id, source, target) {
-            this.id = id;
-            this.source = source;
-            this.target = target;
-        }
-        toString() {
-            return "{ id: " + this.id + ", source: " + this.source + ", target:" + this.target + " }"
-        }
-    }
-
-
-    // Example node data
-    const nodes = [
-        { id: 'a', group: 1 },
-        { id: 'b', group: 1 },
-        { id: 'c', group: 1 },
-        { id: 'd', group: 2 },
-        { id: 'e', group: 2 },
-        { id: 'f', group: 2 },
-        { id: 'g', group: 2 },
-        { id: 'h', group: 2 },
-        { id: 'i', group: 12 },
-        { id: 'j', group: 12 }
-    ];
-
-    // Function to infer edges based on a common attribute (e.g., group)
-    function inferEdges(nodes) {
-        const edges = [];
-        const groups = new Map;
-
-        // Group nodes by a common attribute
-        nodes.forEach(node => {
-            if (!groups[node.group]) {
-                groups[node.group] = [];
-            }
-            groups[node.group].push(node.id);
-        });
-
-        // Create edges within each group
-        Object.values(groups).forEach(groupNodes => {
-            for (let i = 0; i < groupNodes.length; i++) {
-                for (let j = i + 1; j < groupNodes.length; j++) {
-                    myData = new Data(groupNodes[i] + "-" + groupNodes[j], groupNodes[i], groupNodes[j]);
-                    edges.push({ data: { id: myData.id, source: myData.source, target: myData.target } });
-                }
-            }
-        });
-
-        return edges;
-    }
-
-
-
     function luoPerhe() {
         return [
             // nodet eli solmut (päätellään sisällöstä)
@@ -155,12 +101,8 @@
 
 
     window.onload = () => {
-        // cy.add(luoPerhe());
-        // cy.add(luoKokeiluData())
-
-        const edges = inferEdges(nodes);
-        cy.add(nodes.map(node => ({ data: { id: node.id } })));
-        cy.add(edges);
+        cy.add(luoPerhe());
+        cy.add(luoKokeiluData())
     }
 
     /*
