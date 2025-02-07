@@ -13,40 +13,21 @@
 </head>
 
 <body>
-    <div id="cy"></div>
+    <h1>Juuson cytoscape.js testaussivu</h1>
+    <div class="rajaus">
+        <div id="cy"></div>
+    </div>
     <!-- page content -->
 </body>
 <script>
 
     /*
-        Kaikki tämän yllä on vain turhaa höystettä, joka johtuu laiskuudesta!
+        Toteutetaan laiskuuden nimissä tämä staattisena html sivuna!
 
 
 
 
     */
-
-    var sukupuuNoodit;
-
-    function syotaData() {
-        sukupuuNoodit = [
-            // nodet eli solmut (päätellään sisällöstä)
-            { data: { id: 'juuso', parent: undefined }, position: { x: 400, y: 100 } },
-            { data: { id: 'vilma', parent: undefined }, position: { x: 600, y: 100 } },
-            { data: { id: 'perhe', parent: undefined }, position: { x: 500, y: 100 } },
-            { data: { id: 'sulo', parent: '' }, position: { x: 350, y: 300 } },
-            { data: { id: 'oole', parent: '' }, position: { x: 450, y: 300 } },
-            { data: { id: 'julius', parent: '' }, position: { x: 550, y: 300 } },
-            { data: { id: 'miiki', parent: '' }, position: { x: 650, y: 300 } },
-            // edget eli kaaret
-            { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' } },
-            { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' } },
-            { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' } },
-            { data: { id: 'perheOole', source: 'perhe', target: 'oole' } },
-            { data: { id: 'perheJulius', source: 'perhe', target: 'julius' } },
-            { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' } }
-        ]
-    }
 
     var cy = cytoscape({
         container: document.getElementById('cy'), // container to render in
@@ -80,12 +61,106 @@
 
         // options
         zoom: 1,
-        wheelSensitivity: 0.25
+        wheelSensitivity: 0.5,
+        minZoom: 0.05,
+        maxZoom: 4
     });
 
+    class Data {
+        constructor(id, source, target) {
+            this.id = id;
+            this.source = source;
+            this.target = target;
+        }
+        toString() {
+            return "{ id: " + this.id + ", source: " + this.source + ", target:" + this.target + " }"
+        }
+    }
+
+
+    // Example node data
+    const nodes = [
+        { id: 'a', group: 1 },
+        { id: 'b', group: 1 },
+        { id: 'c', group: 1 },
+        { id: 'd', group: 2 },
+        { id: 'e', group: 2 },
+        { id: 'f', group: 2 },
+        { id: 'g', group: 2 },
+        { id: 'h', group: 2 },
+        { id: 'i', group: 12 },
+        { id: 'j', group: 12 }
+    ];
+
+    // Function to infer edges based on a common attribute (e.g., group)
+    function inferEdges(nodes) {
+        const edges = [];
+        const groups = new Map;
+
+        // Group nodes by a common attribute
+        nodes.forEach(node => {
+            if (!groups[node.group]) {
+                groups[node.group] = [];
+            }
+            groups[node.group].push(node.id);
+        });
+
+        // Create edges within each group
+        Object.values(groups).forEach(groupNodes => {
+            for (let i = 0; i < groupNodes.length; i++) {
+                for (let j = i + 1; j < groupNodes.length; j++) {
+                    myData = new Data(groupNodes[i] + "-" + groupNodes[j], groupNodes[i], groupNodes[j]);
+                    edges.push({ data: { id: myData.id, source: myData.source, target: myData.target } });
+                }
+            }
+        });
+
+        return edges;
+    }
+
+
+
+    function luoPerhe() {
+        return [
+            // nodet eli solmut (päätellään sisällöstä)
+            { data: { id: 'boss', parent: undefined }, position: { x: 500, y: 0 } },
+            { data: { id: 'juuso', parent: 'boss' }, position: { x: 400, y: 100 } },
+            { data: { id: 'vilma', parent: 'boss' }, position: { x: 600, y: 100 } },
+            { data: { id: 'perhe', parent: 'vilma' }, position: { x: 500, y: 100 } },
+            { data: { id: 'sulo', parent: '' }, position: { x: 350, y: 300 } },
+            { data: { id: 'oole', parent: '' }, position: { x: 450, y: 300 } },
+            { data: { id: 'julius', parent: '' }, position: { x: 550, y: 300 } },
+            { data: { id: 'miiki', parent: '' }, position: { x: 650, y: 300 } },
+            // edget eli kaaret
+            // { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' } },
+            // { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' } },
+            // { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' } },
+            // { data: { id: 'perheOole', source: 'perhe', target: 'oole' } },
+            // { data: { id: 'perheJulius', source: 'perhe', target: 'julius' } },
+            // { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' } }
+        ]
+    }
+
+    function luoKokeiluData() {
+        return [
+            // nodet eli solmut (päätellään sisällöstä)
+            { data: { id: 'jarmo', parent: undefined }, position: { x: 700, y: 100 } },
+            { data: { id: 'osmo', parent: undefined }, position: { x: 900, y: 100 } },
+            { data: { id: 'parisuhde', parent: 'osmo' }, position: { x: 800, y: 100 } },
+            // edget eli kaaret
+            // { data: { id: 'jarmoParisuhde', source: 'jarmo', target: 'parisuhde' } },
+            // { data: { id: 'osmoParisuhde', source: 'osmo', target: 'parisuhde' } }
+        ]
+    }
+
+
     window.onload = () => {
-        syotaData();
-        cy.add(sukupuuNoodit);
+        // cy.add(luoPerhe());
+        // cy.add(luoKokeiluData())
+
+        const edges = inferEdges(nodes);
+        cy.add(nodes.map(node => ({ data: { id: node.id } })));
+        cy.add(edges);
     }
 
     /*
@@ -93,7 +168,7 @@
 
 
 
-        Turha höyste jatkuu.
+        Höyste html jatkuu.
     */
 
 </script>

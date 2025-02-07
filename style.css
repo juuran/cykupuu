@@ -3,3 +3,9 @@
   height: 800px;
   display: block;
 }
+
+.rajaus {
+  border-style:dashed;
+  margin: 10px;
+  margin-right: 80px;
+}
