@@ -4,12 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
     <title>testi cytoscape</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"
-        integrity="sha512-xpXUCbrkyJCwC5noJXZqec9rSXdRgFfDoL7Q9/pCPe54Y04OlqwPobMcNuA5NPJ7DRR51OIr6xcOH2wUspyKDQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer">
-        </script>
+    <script src="./cytoscape.umd.js"></script> <!-- Tämän voi vaihtaa minifoiduksi versioksi, kun suorituskyvyllä alkaa olla väliä! -->
 </head>
 
 <body>
@@ -18,101 +16,7 @@
         <div id="cy"></div>
     </div>
     <!-- page content -->
+    <script src="./skripti.js"></script>
 </body>
-<script>
-
-    /*
-        Toteutetaan laiskuuden nimissä tämä staattisena html sivuna!
-
-
-
-
-    */
-
-    var cy = cytoscape({
-        container: document.getElementById('cy'), // container to render in
-        elements: [],
-
-        style: [ // the stylesheet for the graph
-            {
-                selector: 'node',
-                style: {
-                    'background-color': '#666',
-                    'label': 'data(id)'
-                }
-            },
-
-            {
-                selector: 'edge',
-                style: {
-                    'width': 3,
-                    'line-color': '#ccc',
-                    'target-arrow-color': '#ccc',
-                    'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier'
-                }
-            }
-        ],
-
-        layout: {
-            name: 'grid',
-            rows: 1
-        },
-
-        // options
-        zoom: 1,
-        wheelSensitivity: 0.5,
-        minZoom: 0.05,
-        maxZoom: 4
-    });
-
-    function luoPerhe() {
-        return [
-            // nodet eli solmut (päätellään sisällöstä)
-            { data: { id: 'boss', parent: undefined }, position: { x: 500, y: 0 } },
-            { data: { id: 'juuso', parent: 'boss' }, position: { x: 400, y: 100 } },
-            { data: { id: 'vilma', parent: 'boss' }, position: { x: 600, y: 100 } },
-            { data: { id: 'perhe', parent: 'vilma' }, position: { x: 500, y: 100 } },
-            { data: { id: 'sulo', parent: '' }, position: { x: 350, y: 300 } },
-            { data: { id: 'oole', parent: '' }, position: { x: 450, y: 300 } },
-            { data: { id: 'julius', parent: '' }, position: { x: 550, y: 300 } },
-            { data: { id: 'miiki', parent: '' }, position: { x: 650, y: 300 } },
-            // edget eli kaaret
-            // { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' } },
-            // { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' } },
-            // { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' } },
-            // { data: { id: 'perheOole', source: 'perhe', target: 'oole' } },
-            // { data: { id: 'perheJulius', source: 'perhe', target: 'julius' } },
-            // { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' } }
-        ]
-    }
-
-    function luoKokeiluData() {
-        return [
-            // nodet eli solmut (päätellään sisällöstä)
-            { data: { id: 'jarmo', parent: undefined }, position: { x: 700, y: 100 } },
-            { data: { id: 'osmo', parent: undefined }, position: { x: 900, y: 100 } },
-            { data: { id: 'parisuhde', parent: 'osmo' }, position: { x: 800, y: 100 } },
-            // edget eli kaaret
-            // { data: { id: 'jarmoParisuhde', source: 'jarmo', target: 'parisuhde' } },
-            // { data: { id: 'osmoParisuhde', source: 'osmo', target: 'parisuhde' } }
-        ]
-    }
-
-
-    window.onload = () => {
-        cy.add(luoPerhe());
-        cy.add(luoKokeiluData())
-    }
-
-    /*
-
-
-
-
-        Höyste html jatkuu.
-    */
-
-</script>
 
 </html>
