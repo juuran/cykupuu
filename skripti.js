@@ -74,9 +74,9 @@ function luoLayout() {
 function luoPerhe() {
     return [
         // nodet eli solmut (päätellään sisällöstä)
-        // { data: { id: 'jussi' } },
-        // { data: { id: 'raili' } },
-        // { data: { id: 'alkuperhe' } },
+        // { data: { id: 'jussi' } },       // Jos nämä laittaa päälle, näkymä hajoaa...
+        // { data: { id: 'raili' } },       // Nämä siis muistuttamassa että vaatii kentän
+        // { data: { id: 'alkuperhe' } },   // tason / korkeuden / levelin ilmaisemiseksi
         { data: { id: 'juuso', weight: 1 } },
         { data: { id: 'vilma', weight: 1 } },
         { data: { id: 'perhe', weight: 1 } },
