@@ -1,3 +1,7 @@
+/*
+Pakolliset initiaatiot yms
+*/
+
 "use strict";
 
 var cy = cytoscape({
@@ -10,6 +14,13 @@ var cy = cytoscape({
             style: {
                 'background-color': '#666',
                 'label': 'data(id)'
+            }
+        },
+        {
+            selector: ':selected',
+            style: {
+                'color': 'maroon',
+                'background-color': 'red'
             }
         },
         {
@@ -46,6 +57,113 @@ var cy = cytoscape({
     maxZoom: 4
 });
 
+var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
+
+/*
+
+
+Muuttujat ja data
+*/
+
+const henkilodata = [
+    { nimi: "hlö0", suhteet: null },  // Tässä esimerkissä nyt nimi on yksilöivä kuin id
+    { nimi: "hlö1", suhteet: null },
+    { nimi: "hlö2", suhteet: null },
+    { nimi: "hlö3", suhteet: null },
+    { nimi: "hlö4", suhteet: null },
+    { nimi: "hlö5", suhteet: null },
+    { nimi: "hlö6", suhteet: null },
+    { nimi: "hlö7", suhteet: null },
+    { nimi: "hlö8", suhteet: null },
+    { nimi: "hlö9", suhteet: null },
+    { nimi: "hlö10", suhteet: null },
+    { nimi: "hlö11", suhteet: null },
+    { nimi: "hlö12", suhteet: null },
+    { nimi: "hlö13", suhteet: null },
+    { nimi: "hlö14", suhteet: null },
+    { nimi: "hlö15", suhteet: null },
+    { nimi: "hlö16", suhteet: null },
+    { nimi: "hlö17", suhteet: null },
+    { nimi: "hlö18", suhteet: null }
+];
+const suhdeData = [
+    {   // yksi olio on yksittäinen suhde
+        suhdeId: 100, suhdetyyppi: "parisuhde",
+        osalliset: [henkilodata[0], henkilodata[1]],
+        lapset: [henkilodata[2], henkilodata[3]]
+    },
+    {
+        suhdeId: 101, suhdetyyppi: "parisuhde",
+        osalliset: [henkilodata[4], henkilodata[5]],
+        lapset: [henkilodata[6], henkilodata[7], henkilodata[8],]
+    },
+    {
+        suhdeId: 102, suhdetyyppi: "eronnut",
+        osalliset: [henkilodata[9], henkilodata[10]],
+        lapset: [henkilodata[11]]
+    },
+    {
+        suhdeId: 103, suhdetyyppi: "härdelli",
+        osalliset: [henkilodata[12], henkilodata[13], henkilodata[14], henkilodata[15]],
+        lapset: [henkilodata[16]]
+    },
+    {
+        suhdeId: 104, suhdetyyppi: "avopari",
+        osalliset: [henkilodata[17], henkilodata[18]],
+        lapset: null
+    },
+];
+
+henkilodata[0].suhteet = suhdeData[0];
+henkilodata[1].suhteet = suhdeData[0];
+henkilodata[2].suhteet = suhdeData[0];
+henkilodata[3].suhteet = suhdeData[0];
+henkilodata[4].suhteet = suhdeData[1];
+henkilodata[5].suhteet = suhdeData[1];
+henkilodata[6].suhteet = suhdeData[1];
+henkilodata[7].suhteet = suhdeData[1];
+henkilodata[8].suhteet = suhdeData[1];
+henkilodata[9].suhteet = suhdeData[2];
+henkilodata[10].suhteet = suhdeData[2];
+henkilodata[11].suhteet = suhdeData[2];
+henkilodata[12].suhteet = suhdeData[3];
+henkilodata[13].suhteet = suhdeData[3];
+henkilodata[14].suhteet = suhdeData[3];
+henkilodata[15].suhteet = suhdeData[3];
+henkilodata[16].suhteet = suhdeData[3];
+henkilodata[17].suhteet = suhdeData[4];
+henkilodata[18].suhteet = suhdeData[4];
+
+/*
+
+
+Funktiot
+*/
+
+function init() {
+    document.addEventListener("keydown", nappaimienKuuntelija);
+}
+
+function nappaimienKuuntelija(event) {
+    if (event.code === "Delete") {
+        const nodet = cy.nodes(":selected");
+        previouslyRemoved.push(cy.remove(nodet));  // käyttää jquery-mäisiä selectoreita (mutta ei itse jqueryä - riippuvuukseton)
+        return;
+    }
+    if (event.code === "Backspace") {
+        let edget = cy.edges(":selected");
+        previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        return;
+    }
+
+    if (event.code === "KeyZ" && event.ctrlKey) {
+        if (previouslyRemoved.length === 0) {
+            return;
+        }
+        previouslyRemoved.pop().restore();
+    }
+}
+
 function luoLayout() {
     return cy.layout({
         name: 'breadthfirst',
@@ -71,59 +189,70 @@ function luoLayout() {
     });
 }
 
-function luoPerhe() {
-    return [
-        // nodet eli solmut (päätellään sisällöstä)
-        // { data: { id: 'jussi' } },       // Jos nämä laittaa päälle, näkymä hajoaa...
-        // { data: { id: 'raili' } },       // Nämä siis muistuttamassa että vaatii kentän
-        // { data: { id: 'alkuperhe' } },   // tason / korkeuden / levelin ilmaisemiseksi
-        { data: { id: 'juuso', weight: 1 } },
-        { data: { id: 'vilma', weight: 1 } },
-        { data: { id: 'perhe', weight: 1 } },
-        { data: { id: 'sulo', weight: 1 } },
-        { data: { id: 'oole', weight: 1 } },
-        { data: { id: 'julius', weight: 1 } },
-        { data: { id: 'miiki', weight: 1 } },
-        // edget eli kaaret
-        // { data: { id: 'railiAlkuperhe', source: 'raili', target: 'alkuperhe' } },
-        // { data: { id: 'jussiAlkuperhe', source: 'jussi', target: 'alkuperhe' } },
-        // { data: { id: 'alkuperheJuuso', source: 'alkuperhe', target: 'juuso' } },
-        { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' }, classes: 'round-taxi' },
-        { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' }, classes: 'round-taxi' },
-        { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' }, classes: 'round-taxi' },
-        { data: { id: 'perheOole', source: 'perhe', target: 'oole' }, classes: 'round-taxi' },
-        { data: { id: 'perheJulius', source: 'perhe', target: 'julius' }, classes: 'round-taxi' },
-        { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' }, classes: 'round-taxi' }
-    ];
+function luoSukupuulleData(henkilot) {
+    let datat = [];
+    let suhtehet = new Set();  // jos keräillään tällaiseen, miksi edes säilöä tämä henkilön sisään?
+
+    // luo solmut henkilöille
+    for (const henkilo of henkilot) {
+        datat.push({
+            data: {
+                id: henkilo.nimi
+            }
+        });
+        suhtehet.add(henkilo.suhteet);
+    }
+
+    let iter = suhtehet.entries();
+    // luo solmut suhteille
+    for (const suhde of iter) {
+        let tempSuhdeId = suhde.suhdetyyppi + " (" + suhde.suhdeId + ")"
+        datat.push({
+            data: {
+                id: tempSuhdeId
+            }
+        });
+
+        // luo kaaret suhteen aikuisista suhdetyyppiin
+        for (const osallinen of suhde.osalliset) {
+            datat.push({
+                data: {
+                    id: osallinen.nimi + tempSuhdeId,  // ei näy missään
+                    source: osallinen.nimi,
+                    target: tempSuhdeId
+                }, classes: 'round-taxi'
+            });
+        }
+
+        if (suhde.lapset == null) {
+            continue;
+        }
+
+        // luo kaaret suhdetyyppistä lapsiin
+        for (const lapsi of suhde.lapset) {
+            datat.push({
+                data: {
+                    id: tempSuhdeId + lapsi.nimi,  // ei näy missään
+                    source: tempSuhdeId,
+                    target: lapsi.nimi
+                }, classes: 'round-taxi'
+            });
+        }
+    }
+
+    return datat;
 }
 
-function luoKokeiluData() {
-    return [
-        // nodet eli solmut (päätellään sisällöstä)
-        { data: { id: 'jarmo', weight: 2 } },
-        { data: { id: 'osmo', weight: 2 } },
-        { data: { id: 'parisuhde', weight: 2 } },
 
-        { data: { id: 'harmo', weight: 3 } },
-        { data: { id: 'tarmo', weight: 3 } },
-        { data: { id: 'armo', weight: 3 } },
-        { data: { id: 'arwo', weight: 3 } },
-        { data: { id: 'monikkosuhde', weight: 3 } },
-
-        // edget eli kaaret
-        { data: { id: 'jarmoParisuhde', source: 'jarmo', target: 'parisuhde' }, classes: 'round-taxi' },
-        { data: { id: 'osmoParisuhde', source: 'osmo', target: 'parisuhde' }, classes: 'round-taxi' },
-
-        { data: { id: 'hMonikkosuhde', source: 'harmo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'tMonikkosuhde', source: 'tarmo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'aMonikkosuhde', source: 'armo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'wMonikkosuhde', source: 'arwo', target: 'monikkosuhde' }, classes: 'round-taxi' }
-    ];
-}
+/*
+ 
+ 
+Ohjelman suoritus, aka "main"
+*/
 
 window.onload = () => {
-    cy.add(luoPerhe());
-    cy.add(luoKokeiluData());
+    init();
+    cy.add(luoSukupuulleData(henkilodata));
     let breadthfirstLayout = luoLayout();
     breadthfirstLayout.run();
 }
