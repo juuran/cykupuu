@@ -1,3 +1,8 @@
+/*
+Pakolliset initiaatiot yms
+--------------------------
+*/
+
 "use strict";
 
 var cy = cytoscape({
@@ -10,6 +15,13 @@ var cy = cytoscape({
             style: {
                 'background-color': '#666',
                 'label': 'data(id)'
+            }
+        },
+        {
+            selector: ':selected',
+            style: {
+                'color': 'maroon',
+                'background-color': 'red'
             }
         },
         {
@@ -46,9 +58,121 @@ var cy = cytoscape({
     maxZoom: 4
 });
 
-function luoLayout() {
+/*
+
+
+Muuttujat ja data
+-----------------
+*/
+
+var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
+
+const henkilodata = [
+    { nimi: "hlö0" },  // Tässä esimerkissä nyt nimi on yksilöivä kuin id
+    { nimi: "hlö1" },
+    { nimi: "hlö2" },
+    { nimi: "hlö3" },
+    { nimi: "hlö4" },
+    { nimi: "hlö5" },
+    { nimi: "hlö6" },
+    { nimi: "hlö7" },
+    { nimi: "hlö8" },
+    { nimi: "hlö9" },
+    { nimi: "hlö10" },
+    { nimi: "hlö11" },
+    { nimi: "hlö12" },
+    { nimi: "hlö13" },
+    { nimi: "hlö14" },
+    { nimi: "hlö15" },
+    { nimi: "hlö16" },
+    { nimi: "hlö17" },
+    { nimi: "hlö18" }
+];
+const suhdeData = [
+    {   // yksi olio on yksittäinen suhde
+        suhdeId: 100, suhdetyyppi: "parisuhde",
+        osalliset: [henkilodata[0], henkilodata[1]],
+        lapset: [henkilodata[2], henkilodata[3]]
+    },
+    {
+        suhdeId: 101, suhdetyyppi: "parisuhde",
+        osalliset: [henkilodata[4], henkilodata[5]],
+        lapset: [henkilodata[6], henkilodata[7], henkilodata[8],]
+    },
+    {
+        suhdeId: 102, suhdetyyppi: "eronnut",
+        osalliset: [henkilodata[9], henkilodata[10]],
+        lapset: [henkilodata[11]]
+    },
+    {
+        suhdeId: 103, suhdetyyppi: "härdelli",
+        osalliset: [henkilodata[12], henkilodata[13], henkilodata[14], henkilodata[15]],
+        lapset: [henkilodata[16]]
+    },
+    {
+        suhdeId: 104, suhdetyyppi: "avopari",
+        osalliset: [henkilodata[17], henkilodata[18]],
+        lapset: null
+    },
+];
+
+/*
+
+
+Funktiot
+--------
+*/
+
+function init() {
+    let breadthfirstLeiska = luoLeiska("breadthfirst");
+    breadthfirstLeiska.run();
+
+    document.addEventListener("keydown", nappaimienKuuntelija);
+    document.getElementById("randoButton").addEventListener("click", nappiKuuntelija);
+    document.getElementById("järjestäButton").addEventListener("click", nappiKuuntelija);
+}
+
+function nappaimienKuuntelija(event) {
+    if (event.code === "Delete") {
+        const nodet = cy.nodes(":selected");
+        previouslyRemoved.push(cy.remove(nodet));  // käyttää jquery-mäisiä selectoreita (mutta ei itse jqueryä - riippuvuukseton)
+        return;
+    }
+    if (event.code === "Backspace") {
+        let edget = cy.edges(":selected");
+        previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        return;
+    }
+
+    if (event.code === "KeyZ" && event.ctrlKey) {
+        if (previouslyRemoved.length === 0) {
+            return;
+        }
+        previouslyRemoved.pop().restore();
+    }
+}
+
+function nappiKuuntelija(event) {
+    if (event.currentTarget.id === "randoButton") {
+        luoLeiska("random").run();
+    }
+
+    if (event.currentTarget.id === "järjestäButton") {
+        luoLeiska("breadthfirst").run();
+    }
+}
+
+/**
+ * Jos tarvitsee nukkua tässä suorituksen aikana. Muista käyttää "await" avainsanan kanssa, esim. "await sleep(2);"
+ * @param {*} secs Uniaika annettuna sekunteina
+ */
+function sleep(secs) {
+    return new Promise(r => setTimeout(r, secs * 1000));
+}
+
+function luoLeiska(nimi) {
     return cy.layout({
-        name: 'breadthfirst',
+        name: nimi,
 
         fit: true, // whether to fit the viewport to the graph
         directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
@@ -71,59 +195,76 @@ function luoLayout() {
     });
 }
 
-function luoPerhe() {
-    return [
-        // nodet eli solmut (päätellään sisällöstä)
-        // { data: { id: 'jussi' } },       // Jos nämä laittaa päälle, näkymä hajoaa...
-        // { data: { id: 'raili' } },       // Nämä siis muistuttamassa että vaatii kentän
-        // { data: { id: 'alkuperhe' } },   // tason / korkeuden / levelin ilmaisemiseksi
-        { data: { id: 'juuso', weight: 1 } },
-        { data: { id: 'vilma', weight: 1 } },
-        { data: { id: 'perhe', weight: 1 } },
-        { data: { id: 'sulo', weight: 1 } },
-        { data: { id: 'oole', weight: 1 } },
-        { data: { id: 'julius', weight: 1 } },
-        { data: { id: 'miiki', weight: 1 } },
-        // edget eli kaaret
-        // { data: { id: 'railiAlkuperhe', source: 'raili', target: 'alkuperhe' } },
-        // { data: { id: 'jussiAlkuperhe', source: 'jussi', target: 'alkuperhe' } },
-        // { data: { id: 'alkuperheJuuso', source: 'alkuperhe', target: 'juuso' } },
-        { data: { id: 'juusoPerhe', source: 'juuso', target: 'perhe' }, classes: 'round-taxi' },
-        { data: { id: 'vilmaPerhe', source: 'vilma', target: 'perhe' }, classes: 'round-taxi' },
-        { data: { id: 'perheSulo', source: 'perhe', target: 'sulo' }, classes: 'round-taxi' },
-        { data: { id: 'perheOole', source: 'perhe', target: 'oole' }, classes: 'round-taxi' },
-        { data: { id: 'perheJulius', source: 'perhe', target: 'julius' }, classes: 'round-taxi' },
-        { data: { id: 'perheMiiki', source: 'perhe', target: 'miiki' }, classes: 'round-taxi' }
-    ];
+function luoSukupuunHenkiloData(henkilot) {
+    let henks = [];
+
+    // luo solmut henkilöille
+    for (const henkilo of henkilot) {
+        henks.push({
+            data: {
+                id: henkilo.nimi
+            }
+        });
+    }
+
+    return henks;
 }
 
-function luoKokeiluData() {
-    return [
-        // nodet eli solmut (päätellään sisällöstä)
-        { data: { id: 'jarmo', weight: 2 } },
-        { data: { id: 'osmo', weight: 2 } },
-        { data: { id: 'parisuhde', weight: 2 } },
+function luoSukupuunSuhdeData(suhteet) {
+    let suhts = [];
 
-        { data: { id: 'harmo', weight: 3 } },
-        { data: { id: 'tarmo', weight: 3 } },
-        { data: { id: 'armo', weight: 3 } },
-        { data: { id: 'arwo', weight: 3 } },
-        { data: { id: 'monikkosuhde', weight: 3 } },
+    for (const suhde of suhteet) {
+        // luo solmut suhteille
+        let tempSuhdeId = suhde.suhdetyyppi + " (" + suhde.suhdeId + ")"
+        suhts.push({
+            data: {
+                id: tempSuhdeId
+            }
+        });
 
-        // edget eli kaaret
-        { data: { id: 'jarmoParisuhde', source: 'jarmo', target: 'parisuhde' }, classes: 'round-taxi' },
-        { data: { id: 'osmoParisuhde', source: 'osmo', target: 'parisuhde' }, classes: 'round-taxi' },
+        // luo kaaret suhteen aikuisista suhdetyyppiin
+        for (const osallinen of suhde.osalliset) {
+            suhts.push({
+                data: {
+                    id: osallinen.nimi + tempSuhdeId,  // ei näy missään
+                    source: osallinen.nimi,
+                    target: tempSuhdeId
+                }, classes: 'round-taxi'
+            });
+        }
 
-        { data: { id: 'hMonikkosuhde', source: 'harmo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'tMonikkosuhde', source: 'tarmo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'aMonikkosuhde', source: 'armo', target: 'monikkosuhde' }, classes: 'round-taxi' },
-        { data: { id: 'wMonikkosuhde', source: 'arwo', target: 'monikkosuhde' }, classes: 'round-taxi' }
-    ];
+        if (suhde.lapset == null) {
+            continue;
+        }
+
+        // luo kaaret suhdetyyppistä lapsiin
+        for (const lapsi of suhde.lapset) {
+            suhts.push({
+                data: {
+                    id: tempSuhdeId + lapsi.nimi,  // ei näy missään
+                    source: tempSuhdeId,
+                    target: lapsi.nimi
+                }, classes: 'round-taxi'
+            });
+        }
+    }
+
+    return suhts;
 }
 
-window.onload = () => {
-    cy.add(luoPerhe());
-    cy.add(luoKokeiluData());
-    let breadthfirstLayout = luoLayout();
-    breadthfirstLayout.run();
+
+/*
+ 
+ 
+Ohjelman suoritus, aka "main"
+-----------------------------
+*/
+
+window.onload = async () => {
+    init();
+    cy.add(luoSukupuunHenkiloData(henkilodata));
+    cy.add(luoSukupuunSuhdeData(suhdeData));
+
+    let breadthfirstLeiska = luoLeiska("breadthfirst");
+    breadthfirstLeiska.run();
 }
