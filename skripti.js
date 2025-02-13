@@ -1,5 +1,6 @@
 /*
 Pakolliset initiaatiot yms
+--------------------------
 */
 
 "use strict";
@@ -61,30 +62,31 @@ var cy = cytoscape({
 
 
 Muuttujat ja data
+-----------------
 */
 
 var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 
 const henkilodata = [
-    { nimi: "hlö0", suhteet: null },  // Tässä esimerkissä nyt nimi on yksilöivä kuin id
-    { nimi: "hlö1", suhteet: null },
-    { nimi: "hlö2", suhteet: null },
-    { nimi: "hlö3", suhteet: null },
-    { nimi: "hlö4", suhteet: null },
-    { nimi: "hlö5", suhteet: null },
-    { nimi: "hlö6", suhteet: null },
-    { nimi: "hlö7", suhteet: null },
-    { nimi: "hlö8", suhteet: null },
-    { nimi: "hlö9", suhteet: null },
-    { nimi: "hlö10", suhteet: null },
-    { nimi: "hlö11", suhteet: null },
-    { nimi: "hlö12", suhteet: null },
-    { nimi: "hlö13", suhteet: null },
-    { nimi: "hlö14", suhteet: null },
-    { nimi: "hlö15", suhteet: null },
-    { nimi: "hlö16", suhteet: null },
-    { nimi: "hlö17", suhteet: null },
-    { nimi: "hlö18", suhteet: null }
+    { nimi: "hlö0" },  // Tässä esimerkissä nyt nimi on yksilöivä kuin id
+    { nimi: "hlö1" },
+    { nimi: "hlö2" },
+    { nimi: "hlö3" },
+    { nimi: "hlö4" },
+    { nimi: "hlö5" },
+    { nimi: "hlö6" },
+    { nimi: "hlö7" },
+    { nimi: "hlö8" },
+    { nimi: "hlö9" },
+    { nimi: "hlö10" },
+    { nimi: "hlö11" },
+    { nimi: "hlö12" },
+    { nimi: "hlö13" },
+    { nimi: "hlö14" },
+    { nimi: "hlö15" },
+    { nimi: "hlö16" },
+    { nimi: "hlö17" },
+    { nimi: "hlö18" }
 ];
 const suhdeData = [
     {   // yksi olio on yksittäinen suhde
@@ -114,33 +116,17 @@ const suhdeData = [
     },
 ];
 
-henkilodata[0].suhteet = suhdeData[0];
-henkilodata[1].suhteet = suhdeData[0];
-henkilodata[2].suhteet = suhdeData[0];
-henkilodata[3].suhteet = suhdeData[0];
-henkilodata[4].suhteet = suhdeData[1];
-henkilodata[5].suhteet = suhdeData[1];
-henkilodata[6].suhteet = suhdeData[1];
-henkilodata[7].suhteet = suhdeData[1];
-henkilodata[8].suhteet = suhdeData[1];
-henkilodata[9].suhteet = suhdeData[2];
-henkilodata[10].suhteet = suhdeData[2];
-henkilodata[11].suhteet = suhdeData[2];
-henkilodata[12].suhteet = suhdeData[3];
-henkilodata[13].suhteet = suhdeData[3];
-henkilodata[14].suhteet = suhdeData[3];
-henkilodata[15].suhteet = suhdeData[3];
-henkilodata[16].suhteet = suhdeData[3];
-henkilodata[17].suhteet = suhdeData[4];
-henkilodata[18].suhteet = suhdeData[4];
-
 /*
 
 
 Funktiot
+--------
 */
 
 function init() {
+    let breadthfirstLeiska = luoLeiska("breadthfirst");
+    breadthfirstLeiska.run();
+
     document.addEventListener("keydown", nappaimienKuuntelija);
     document.getElementById("randoButton").addEventListener("click", nappiKuuntelija);
     document.getElementById("järjestäButton").addEventListener("click", nappiKuuntelija);
@@ -176,6 +162,14 @@ function nappiKuuntelija(event) {
     }
 }
 
+/**
+ * Jos tarvitsee nukkua tässä suorituksen aikana. Muista käyttää "await" avainsanan kanssa, esim. "await sleep(2);"
+ * @param {*} secs Uniaika annettuna sekunteina
+ */
+function sleep(secs) {
+    return new Promise(r => setTimeout(r, secs * 1000));
+}
+
 function luoLeiska(nimi) {
     return cy.layout({
         name: nimi,
@@ -201,25 +195,28 @@ function luoLeiska(nimi) {
     });
 }
 
-function luoSukupuulleData(henkilot) {
-    let datat = [];
-    let suhtehet = new Set();  // jos keräillään tällaiseen, miksi edes säilöä tämä henkilön sisään?
+function luoSukupuunHenkiloData(henkilot) {
+    let henks = [];
 
     // luo solmut henkilöille
     for (const henkilo of henkilot) {
-        datat.push({
+        henks.push({
             data: {
                 id: henkilo.nimi
             }
         });
-        suhtehet.add(henkilo.suhteet);
     }
 
-    let iter = suhtehet.values();
-    // luo solmut suhteille
-    for (const suhde of iter) {
+    return henks;
+}
+
+function luoSukupuunSuhdeData(suhteet) {
+    let suhts = [];
+
+    for (const suhde of suhteet) {
+        // luo solmut suhteille
         let tempSuhdeId = suhde.suhdetyyppi + " (" + suhde.suhdeId + ")"
-        datat.push({
+        suhts.push({
             data: {
                 id: tempSuhdeId
             }
@@ -227,7 +224,7 @@ function luoSukupuulleData(henkilot) {
 
         // luo kaaret suhteen aikuisista suhdetyyppiin
         for (const osallinen of suhde.osalliset) {
-            datat.push({
+            suhts.push({
                 data: {
                     id: osallinen.nimi + tempSuhdeId,  // ei näy missään
                     source: osallinen.nimi,
@@ -242,7 +239,7 @@ function luoSukupuulleData(henkilot) {
 
         // luo kaaret suhdetyyppistä lapsiin
         for (const lapsi of suhde.lapset) {
-            datat.push({
+            suhts.push({
                 data: {
                     id: tempSuhdeId + lapsi.nimi,  // ei näy missään
                     source: tempSuhdeId,
@@ -252,7 +249,7 @@ function luoSukupuulleData(henkilot) {
         }
     }
 
-    return datat;
+    return suhts;
 }
 
 
@@ -260,11 +257,14 @@ function luoSukupuulleData(henkilot) {
  
  
 Ohjelman suoritus, aka "main"
+-----------------------------
 */
 
-window.onload = () => {
+window.onload = async () => {
     init();
-    cy.add(luoSukupuulleData(henkilodata));
+    cy.add(luoSukupuunHenkiloData(henkilodata));
+    cy.add(luoSukupuunSuhdeData(suhdeData));
+
     let breadthfirstLeiska = luoLeiska("breadthfirst");
     breadthfirstLeiska.run();
 }
