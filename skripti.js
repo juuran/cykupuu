@@ -57,13 +57,13 @@ var cy = cytoscape({
     maxZoom: 4
 });
 
-var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
-
 /*
 
 
 Muuttujat ja data
 */
+
+var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 
 const henkilodata = [
     { nimi: "hlö0", suhteet: null },  // Tässä esimerkissä nyt nimi on yksilöivä kuin id
