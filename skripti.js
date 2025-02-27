@@ -3,8 +3,10 @@
 /*
 
 
+
 Muuttujat ja data
 -----------------
+
 */
 
 var cy = cytoscape({
@@ -23,7 +25,9 @@ var cy = cytoscape({
             selector: ':selected',
             style: {
                 'color': 'maroon',
-                'background-color': 'red'
+                'background-color': 'red',
+                'width': '36px',
+                'height': '36px'
             }
         },
         {
@@ -55,54 +59,57 @@ var cy = cytoscape({
 });
 
 const NAYTON_LEVEYS = 1200;
-const NO_OF_GROUPS = 4;
+const NO_OF_GROUPS = 3;
 const SIVU_MARGIN = 100;
+const SUHTEEN_MARGIN = 60;
 var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 var statusbar;
 
 class Henkilo {
-    constructor(nimi, vanhempiSuhteet, lapsiSuhteet, ryhmä, level) {
+    constructor(nimi, vanhempiSuhteet, lapsiSuhteet, syvyys) {
         this.nimi = nimi;
         this.vanhempiSuhteet = vanhempiSuhteet;
         this.lapsiSuhteet = lapsiSuhteet;
-        this.ryhmä = ryhmä;
-        this.level = level;
+        this.syvyys = syvyys;
     }
     toString() {
-        return `[ Nimi: ${this.nimi}. VanhempiSuhteet: (${this.vanhempiSuhteet}). Lapsisuhteet: (${this.lapsiSuhteet}). (w=${this.ryhmä},l=${this.level}) ]`;
+        return `[ Nimi: ${this.nimi}. VanhempiSuhteet: (${this.vanhempiSuhteet}). Lapsisuhteet: (${this.lapsiSuhteet}). (s=${this.syvyys}) ]`;
     }
 }
 
 const henkilodata = [
-    new Henkilo("hlö0", [], [], 1, 1),      // 0    (Tässä esimerkissä nyt nimi on yksilöivä kuin id)
-    new Henkilo("hlö1", [], [], 1, 1),      // 1
-    new Henkilo("hlö2", [], [], 1, 2),      // 2
-    new Henkilo("hlö3", [], [], 1, 2),      // 3
-    new Henkilo("hlö4", [], [], 1, 2),      // 4
-    new Henkilo("hlö5", [], [], 1, 2),      // 5
-    new Henkilo("hlö6", [], [], 2, 2),      // 6
-    new Henkilo("hlö7", [], [], 1, 3),      // 7
-    new Henkilo("hlö8", [], [], 1, 3),      // 8
-    new Henkilo("hlö9", [], [], 3, 1),      // 9
-    new Henkilo("hlö10", [], [], 3, 1),     // 10
-    new Henkilo("hlö11", [], [], 3, 3),     // 11
-    new Henkilo("hlö12", [], [], 1, 4),     // 12
-    new Henkilo("hlö13", [], [], 1, 4),     // 13
-    new Henkilo("hlö14", [], [], 1, 4),     // 14
-    new Henkilo("hlö15", [], [], 1, 4),     // 15
-    new Henkilo("hlö16", [], [], 3, 2),     // 16
-    new Henkilo("hlö17", [], [], 4, 3),     // 17
-    new Henkilo("hlö18", [], [], 4, 3),     // 18
-    new Henkilo("hlö19", [], [], 4, 3)      // 19
+    new Henkilo("hlö0", [], [], 1),      // 0    (Tässä esimerkissä nyt nimi on yksilöivä kuin id)
+    new Henkilo("hlö1", [], [], 1),      // 1
+    new Henkilo("hlö2", [], [], 3),      // 2
+    new Henkilo("hlö3", [], [], 3),      // 3
+    new Henkilo("hlö4", [], [], 3),      // 4
+    new Henkilo("hlö5", [], [], 3),      // 5
+    new Henkilo("hlö6", [], [], 3),      // 6
+    new Henkilo("hlö7", [], [], 5),      // 7
+    new Henkilo("hlö8", [], [], 5),      // 8
+    new Henkilo("hlö9", [], [], 1),      // 9
+    new Henkilo("hlö10", [], [], 1),     // 10
+    new Henkilo("hlö11", [], [], 5),     // 11
+    new Henkilo("hlö12", [], [], 7),     // 12
+    new Henkilo("hlö13", [], [], 7),     // 13
+    new Henkilo("hlö14", [], [], 7),     // 14
+    new Henkilo("hlö15", [], [], 7),     // 15
+    new Henkilo("hlö16", [], [], 3),     // 16
+    new Henkilo("hlö17", [], [], 5),     // 17
+    new Henkilo("hlö18", [], [], 5),     // 18
+    new Henkilo("hlö19", [], [], 5),     // 19
+    new Henkilo("hlö20", [], [], 1),     // 20
+    new Henkilo("hlö21", [], [], 1),     // 21
 ];
 
 class Suhde {
-    constructor(suhdeId, suhdetyyppi, yhdessä, vanhemmat, lapset) {
+    constructor(suhdeId, suhdetyyppi, yhdessä, vanhemmat, lapset, ryhmä) {
         this.suhdeId = suhdeId;
         this.suhdetyyppi = suhdetyyppi;
         this.yhdessä = yhdessä;
         this.vanhemmat = vanhemmat;
         this.lapset = lapset;
+        this.ryhmä = ryhmä;
     }
     toString() {
         let vanhTeksti = "{";
@@ -116,7 +123,7 @@ class Suhde {
         }
         lapsTeksti = lapsTeksti + "}";
 
-        return `${vanhTeksti} --> ${lapsTeksti}`;
+        return `${vanhTeksti} --> ${lapsTeksti} (r=${this.ryhmä})`;
     }
 }
 
@@ -125,23 +132,27 @@ const suhdeData = [
     new Suhde(
         100, "avioliitto", true,
         [henkilodata[0], henkilodata[1]],
-        [henkilodata[2], henkilodata[3], henkilodata[4], henkilodata[5]]),
+        [henkilodata[2], henkilodata[3], henkilodata[4], henkilodata[5]], 1),
     new Suhde(
-        101, "eronnut", false,
+        101, "avioliitto (eronnut)", false,
         [henkilodata[5], henkilodata[6]],
-        [henkilodata[7], henkilodata[8]]),
+        [henkilodata[7], henkilodata[8]], 1),
     new Suhde(
         102, "avioliitto", true,
         [henkilodata[9], henkilodata[10]],
-        [henkilodata[6]]),
+        [henkilodata[6]], 2),
     new Suhde(
-        103, "avioliitto", true,
+        103, "avoliitto", true,
         [henkilodata[7], henkilodata[11]],
-        [henkilodata[12], henkilodata[13], henkilodata[14], henkilodata[15]]),
+        [henkilodata[12], henkilodata[13], henkilodata[14], henkilodata[15]], 1),
     new Suhde(
         104, "avioliitto", true,
         [henkilodata[6], henkilodata[16]],
-        [henkilodata[17], henkilodata[18], henkilodata[19]])
+        [henkilodata[17], henkilodata[18], henkilodata[19]], 2),
+    new Suhde(
+        105, "avioliitto", true,
+        [henkilodata[20], henkilodata[21]],
+        [henkilodata[16]], 3)
 ];
 henkilodata[0].vanhempiSuhteet.push(null); /*               */ henkilodata[0].lapsiSuhteet.push(suhdeData[0]);
 henkilodata[1].vanhempiSuhteet.push(null); /*               */ henkilodata[1].lapsiSuhteet.push(suhdeData[0]);
@@ -159,21 +170,25 @@ henkilodata[12].vanhempiSuhteet.push(suhdeData[3]);
 henkilodata[13].vanhempiSuhteet.push(suhdeData[3]);
 henkilodata[14].vanhempiSuhteet.push(suhdeData[3]);
 henkilodata[15].vanhempiSuhteet.push(suhdeData[3]);
-henkilodata[16].vanhempiSuhteet.push(null); /*              */ henkilodata[16].lapsiSuhteet.push(suhdeData[4]);
+henkilodata[16].vanhempiSuhteet.push(suhdeData[5]); /*      */ henkilodata[16].lapsiSuhteet.push(suhdeData[4]);
 henkilodata[17].vanhempiSuhteet.push(suhdeData[4]);
 henkilodata[18].vanhempiSuhteet.push(suhdeData[4]);
 henkilodata[19].vanhempiSuhteet.push(suhdeData[4]);
+henkilodata[20].vanhempiSuhteet.push(null); /*              */ henkilodata[20].lapsiSuhteet.push(suhdeData[5]);
+henkilodata[21].vanhempiSuhteet.push(null); /*              */ henkilodata[21].lapsiSuhteet.push(suhdeData[5]);
 
 /*
 
 
-Funktiot (alustus, apufunktiot yms)
------------------------------------
+
+Funktiot (apufunktiot, alustukset, kuuntelijat jne)
+---------------------------------------------------
+
 */
 
 function init() {
     statusbar = document.getElementById("statusbar");
-    let breadthfirstLeiska = luoLeiska("breadthfirst");
+    let breadthfirstLeiska = luoLeiska("preset");
     breadthfirstLeiska.run();
 
     document.addEventListener("keydown", nappaimienKuuntelija);
@@ -208,6 +223,32 @@ function nappaimienKuuntelija(event) {
         }
         previouslyRemoved.pop().restore();
     }
+
+    if (event.code === "KeyA") {
+        statusbar.textContent = 'Painettu näppäintä "A" (all): valitse kaikki solmut.';
+        cy.elements().select();
+    }
+
+    if (event.code === "KeyR") {
+        selectRoots();
+    }
+
+    if (event.code === "KeyL") {
+        statusbar.textContent = 'Painettu näppäintä "L" (leaves): valitse lehdet.';
+        cy.nodes().leaves().select();
+    }
+
+    if (event.code === "KeyK") {
+        valitseLapset();
+    }
+
+    if (event.code === "KeyP") {
+        valitseVanhemmat();
+    }
+
+    if (event.code === "KeyJ") {
+        juusoSearch();
+    }
 }
 
 function nappiKuuntelija(event) {
@@ -228,6 +269,8 @@ function nappiKuuntelija(event) {
 function valitsimenKuuntelija(event) {
     let valitut = cy.nodes(":selected");
     if (valitut.length === 1) {
+        // DEBUG LOG valituille, voipi olla että turha
+        console.log(`solmu "${valitut.id()}" valittu: ${valitut.scratch()._itse.toString()}`);
         const tiedot = valitut[0].scratch()._itse.toString();
         statusbar.textContent = tiedot;
     }
@@ -261,7 +304,7 @@ function luoLeiska(nimi) {
         nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
         roots: undefined, // the roots of the trees
         depthSort: function (a, b) { return a.data('weight') - b.data('weight') }, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
-        animate: false, // whether to transition the node positions
+        animate: true, // whether to transition the node positions
         animationDuration: 500, // duration of animation in ms if enabled
         animationEasing: undefined, // easing of animation if enabled,
         animateFilter: function (node, i) { return true; }, // a function that determines whether the node should be animated.  All nodes animated by default on animate enabled.  Non-animated nodes are positioned immediately when the layout starts
@@ -272,54 +315,40 @@ function luoLeiska(nimi) {
     });
 }
 
+async function animoiPolut(polut) {
+    for (let polku of polut) {
+        let speed = 0.3;
+        cy.nodes().unselect();
+        for (let askel of polku) {
+            askel.select();
+            await sleep(speed);
+            speed = speed * 0.91;
+        }
+        await sleep(0.2);
+    }
+}
+
 /*
 
 
-Funktiot (business-logiikka tms)
---------------------------------
+
+Funktiot (business-logiikka, "tärkeät funktiot" tms)
+----------------------------------------------------
+
 */
 
 function luoSukupuunHenkiloData(henkilot) {
     let henks = [];
 
-    let edellisenVanhempiSuhde = undefined;  // undefined ettei näyttäisi olevan sama nullin kanssa, mikä taas meinaa: ei tiedossa
-    let monesko = 0;
     // luo solmut henkilöille
     for (const henkilo of henkilot) {
-        const pystyPiste = henkilo.level * 200;
-
-        let vaakaPiste;
-        const vanhempiSuhde = henkilo.vanhempiSuhteet[0];
-        if (edellisenVanhempiSuhde === vanhempiSuhde) {
-            monesko++;
-        } else {
-            monesko = 0;
-        }
-        let monesta;
-        if (vanhempiSuhde === null) {
-            for (let lapsiSuhde of henkilo.lapsiSuhteet) {
-                if (lapsiSuhde.yhdessä) {
-                    monesta = lapsiSuhde.vanhemmat.length;
-                }
-            }
-        } else {
-            monesta = vanhempiSuhde.lapset.length;
-        }
-        let henkilönVaakaPiste;
-        try {
-            const kerroin = monesko / (monesta + 1);  // monesko min. 0, monesta max. x-1 ettei piirretä yli oman alueen
-            henkilönVaakaPiste = (kerroin * (NAYTON_LEVEYS / NO_OF_GROUPS));
-            const ryhmänVaakaPiste = laskeRyhmänVaakaPiste(henkilo.ryhmä);
-            vaakaPiste = ryhmänVaakaPiste + henkilönVaakaPiste;
-        } catch (e) {
-            vaakaPiste = ryhmänVaakaPiste + (monesko * 10);
-        }
+        let ryhmäni = haeHenkilonRyhmä(henkilo);
 
         henks.push({
             group: 'nodes',
             data: {
                 id: henkilo.nimi,
-                weight: henkilo.ryhmä
+                weight: ryhmäni
             },
             scratch: {
                 _itse: {
@@ -328,14 +357,8 @@ function luoSukupuunHenkiloData(henkilot) {
                     lapsiSuhteet: henkilo.lapsiSuhteet,
                     toString: () => henkilo.toString()
                 }
-            },
-            position: {
-                x: vaakaPiste + SIVU_MARGIN,
-                y: pystyPiste
             }
         });
-
-        edellisenVanhempiSuhde = vanhempiSuhde;
     }
 
     return henks;
@@ -347,8 +370,7 @@ function luoSukupuunSuhdeData(suhteet) {
     for (const suhde of suhteet) {
         // luo solmut suhteille
         let tempSuhdeId = suhde.suhdetyyppi + " (" + suhde.suhdeId + ")";
-        const pystyPiste = (suhde.vanhemmat[0].level * 200) + 50;
-        const vaakaKeskiPiste = laskeRyhmänVaakaKeskiPiste(suhde.lapset[0].ryhmä);
+
         suhts.push({
             group: 'nodes',
             data: {
@@ -362,10 +384,6 @@ function luoSukupuunSuhdeData(suhteet) {
                     lapset: suhde.lapset,
                     toString: () => suhde.toString()
                 }
-            },
-            position: {
-                x: vaakaKeskiPiste + SIVU_MARGIN,
-                y: pystyPiste
             }
         });
 
@@ -403,25 +421,193 @@ function luoSukupuunSuhdeData(suhteet) {
     return suhts;
 }
 
+function asetaGraafinPositiot(elementit) {
+    let edellisenVanhempiSuhde = undefined;  // undefined ettei näyttäisi olevan sama nullin kanssa, mikä taas meinaa: ei tiedossa
+    let monesko = 0;
+
+    for (const solmu of elementit) {
+        if (!solmu.isNode()) {
+            continue;
+        }
+
+        if (solmu.scratch()._itse.henkilo != null) {
+
+            const henkilo = solmu.scratch()._itse.henkilo;
+
+            const pystyPiste = henkilo.syvyys * 100;
+            let vaakaPiste;
+            const vanhempiSuhde = henkilo.vanhempiSuhteet[0];
+            if (edellisenVanhempiSuhde === vanhempiSuhde) {
+                monesko++;
+            } else {
+                monesko = 0;
+            }
+
+            let monesta;
+            if (vanhempiSuhde === null) {
+                for (let lapsiSuhde of henkilo.lapsiSuhteet) {
+                    if (lapsiSuhde.yhdessä) {
+                        monesta = lapsiSuhde.vanhemmat.length;
+                    }
+                }
+            } else {
+                monesta = vanhempiSuhde.lapset.length;
+            }
+
+            let henkilönVaakaPiste;
+            try {
+                const kerroin = monesko / (monesta + 1);  // monesko == min. 0, monesta == max. x-1 ettei piirretä yli oman alueen
+                henkilönVaakaPiste = (kerroin * (NAYTON_LEVEYS / NO_OF_GROUPS));
+                var ryhmänVaakaPiste = laskeRyhmänVaakaPiste(haeHenkilonRyhmä(henkilo));
+                vaakaPiste = ryhmänVaakaPiste + henkilönVaakaPiste;
+            } catch (e) {
+                vaakaPiste = ryhmänVaakaPiste + (monesko * 10);
+            }
+
+            console.dir("solmun jeison ennen: " + JSON.stringify(solmu.json()));
+            solmu.json({
+                position: {
+                    x: vaakaPiste + SIVU_MARGIN,
+                    y: pystyPiste
+                }
+            });
+            console.dir("solmun jeison jälkeen: " + JSON.stringify(solmu.json()));
+
+            edellisenVanhempiSuhde = vanhempiSuhde;
+
+        } else if (solmu.scratch()._itse.suhde != null) {
+
+            const suhde = solmu.scratch()._itse.suhde;
+
+            const pystyPiste = (suhde.vanhemmat[0].syvyys * 100) + SUHTEEN_MARGIN;
+            const vaakaKeskiPiste = laskeRyhmänVaakaKeskiPiste(suhde.ryhmä);
+
+            solmu.json({
+                position: {
+                    x: vaakaKeskiPiste + SIVU_MARGIN,
+                    y: pystyPiste
+                }
+            });
+
+        }
+    }
+}
+
+function haeHenkilonRyhmä(henkilo) {
+    if (henkilo.vanhempiSuhteet[0] != null) {
+        return henkilo.vanhempiSuhteet[0].ryhmä;
+    }
+
+    return henkilo.lapsiSuhteet[0].ryhmä;
+}
+
 function laskeRyhmänVaakaPiste(ryhmä) {
     return (NAYTON_LEVEYS / NO_OF_GROUPS) * (ryhmä - 1);
 }
 
 function laskeRyhmänVaakaKeskiPiste(ryhmä) {
-    return laskeRyhmänVaakaPiste(ryhmä) + ((NAYTON_LEVEYS / NO_OF_GROUPS) * 0.5);
+    // TODO: Tee joskus tästä fiksumpi!
+    return laskeRyhmänVaakaPiste(ryhmä) + ((NAYTON_LEVEYS / NO_OF_GROUPS) * 0.18);
+}
+
+function selectRoots() {
+    let valitut = cy.nodes(":selected");
+    if (valitut.length <= 1) {
+        statusbar.textContent = 'Painettu näppäintä "R" (roots): valitse juuret.';
+        cy.nodes().roots().select();
+        return;
+    }
+
+    statusbar.textContent = 'Painettu näppäintä "R" (roots) kokoelmalle solmuja: valitaan juuret tälle joukolle.';
+    valitut.unselect();
+    valitut.roots().select();
+}
+
+function valitseLapset() {
+    let valitut = cy.nodes(":selected");
+    if (valitut.length === 0) {
+        statusbar.textContent = 'Painettu näppäintä "K" (kids): Lasten (ja lapsisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
+        return;
+    }
+
+    valitut.outgoers().select();
+    statusbar.textContent = 'Painettu näppäintä "K" (kids): valitaan lapset ja lapsisuhteet valitulle solmulle.';
+}
+
+function valitseVanhemmat() {
+    let valitut = cy.nodes(":selected");
+    if (valitut.length === 0) {
+        statusbar.textContent = 'Painettu näppäintä "P" (parents): Vanhempien (ja vanhempisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
+        return;
+    }
+
+    valitut.incomers().select();
+    statusbar.textContent = 'Painettu näppäintä "P" (parents): valitaan vanhemmat ja vanhempisuhteet valitulle solmulle.';
+}
+
+async function juusoSearch() {
+    statusbar.textContent = 'Painettu näppäintä "J" (Juuso): juuso juuso';
+    const valitutJuuret = cy.nodes(":selected");
+    if (valitutJuuret.length === 0) {
+        statusbar.textContent = 'Painettu näppäintä "J" (Juuso): Tyhjä valinta! Joku solmu tai joukko solmuja vaaditaan.';
+        return;
+    }
+
+    let syvinSyvyys = -1;
+    let syvyys = -1;
+    let polut = [];
+    const samanSyvyydenSuhteet = new Map();
+    for (const juuri of valitutJuuret) {
+        const results = cy.elements().breadthFirstSearch({
+            roots: juuri,
+            visit: function (v, e, u, i, depth) {
+
+                // käydään läpi kaikki solmut
+
+                syvyys = depth + 1;
+                console.log(`vieraillaan järjestyksessä: ${i}, syvyys: ${syvyys}, syvinSyvyys: ${syvinSyvyys}, id: ${v.id()}`);
+
+                if (syvyys % 2 === 0) {  // suhde-solmut parillisia, asetetaan niiden perusteella ryhmä
+                    let nykymäärä = 1;
+                    if (samanSyvyydenSuhteet.get(syvyys) != null) {
+                        nykymäärä = samanSyvyydenSuhteet.get(syvyys) + 1;
+                    }
+                    v.scratch()._itse.suhde.ryhmä = nykymäärä;
+                    samanSyvyydenSuhteet.set(nykymäärä);
+                } else {
+                    v.scratch()._itse.henkilo.syvyys = syvyys;
+                }
+
+                if (syvyys > syvinSyvyys) {
+                    syvinSyvyys = syvyys;
+                }
+            },
+            directed: true
+        });
+
+        polut.push(results.path);
+    }
+
+    statusbar.textContent = "Saatu syvin syvyys on: " + syvinSyvyys;
+
+    animoiPolut(polut);
 }
 
 /*
- 
- 
+
+
+
 Ohjelman suoritus, aka "main"
 -----------------------------
+
 */
 
-async function main() {
+function main() {
     init();
     cy.add(luoSukupuunHenkiloData(henkilodata));
     cy.add(luoSukupuunSuhdeData(suhdeData));
+    asetaGraafinPositiot(cy.elements());
+    cy.animate({ pan: { x: -50, y: -50 }, zoom: 1, duration: 300, easing: "ease-in-out" });
 }
 
 window.onload = async () => {
