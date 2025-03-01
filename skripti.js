@@ -49,6 +49,18 @@ var cy = cytoscape({
                 'taxi-turn-min-distance': 5,
                 'taxi-radius': 10
             }
+        },
+        {
+            "selector": "node[label]",
+            "style": {
+                "label": "data(label)"
+            }
+        },
+        {
+            "selector": ".multiline-manual",
+            "style": {
+                "text-wrap": "wrap"
+            }
         }
     ],
 
@@ -61,7 +73,8 @@ var cy = cytoscape({
 const NAYTON_LEVEYS = 1200;
 const NO_OF_GROUPS = 3;
 const SIVU_MARGIN = 100;
-const SUHTEEN_MARGIN = 60;
+const SUHTEEN_MARGIN = 50;
+var unsafe_global_syvin_syvyys = -1;
 var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 var statusbar;
 
@@ -123,7 +136,7 @@ class Suhde {
         }
         lapsTeksti = lapsTeksti + "}";
 
-        return `${vanhTeksti} --> ${lapsTeksti} (r=${this.ryhmä})`;
+        return `${vanhTeksti} --> ${lapsTeksti}`;
     }
 }
 
@@ -187,6 +200,7 @@ Funktiot (apufunktiot, alustukset, kuuntelijat jne)
 */
 
 function init() {
+    unsafe_global_syvin_syvyys = -1;  // että varmasti lasketaan uudestaan joka kerta kun kutsutaan init()
     statusbar = document.getElementById("statusbar");
     let breadthfirstLeiska = luoLeiska("preset");
     breadthfirstLeiska.run();
@@ -248,6 +262,10 @@ function nappaimienKuuntelija(event) {
 
     if (event.code === "KeyJ") {
         juusoSearch();
+    }
+
+    if (event.code === "KeyH") {
+        asetaGraafinPositiot(cy.elements());
     }
 }
 
@@ -317,14 +335,14 @@ function luoLeiska(nimi) {
 
 async function animoiPolut(polut) {
     for (let polku of polut) {
-        let speed = 0.3;
+        let speed = 0.2;
         cy.nodes().unselect();
         for (let askel of polku) {
             askel.select();
             await sleep(speed);
-            speed = speed * 0.91;
+            speed = speed * 0.92;
         }
-        await sleep(0.2);
+        await sleep(0.1);
     }
 }
 
@@ -348,8 +366,10 @@ function luoSukupuunHenkiloData(henkilot) {
             group: 'nodes',
             data: {
                 id: henkilo.nimi,
-                weight: ryhmäni
+                weight: ryhmäni,
+                label: `${henkilo.nimi}`  // tämä sallii monirivisen tekstin
             },
+            classes: 'multiline-manual',
             scratch: {
                 _itse: {
                     henkilo: henkilo,
@@ -382,7 +402,7 @@ function luoSukupuunSuhdeData(suhteet) {
                     suhde: suhde,
                     vanhemmat: suhde.vanhemmat,
                     lapset: suhde.lapset,
-                    toString: () => suhde.toString()
+                    toString: () => suhde.toString() + `(r=${suhde.ryhmä})`,
                 }
             }
         });
@@ -464,14 +484,14 @@ function asetaGraafinPositiot(elementit) {
                 vaakaPiste = ryhmänVaakaPiste + (monesko * 10);
             }
 
-            console.dir("solmun jeison ennen: " + JSON.stringify(solmu.json()));
+            // console.dir("solmun jeison ennen: " + JSON.stringify(solmu.json()));
             solmu.json({
                 position: {
                     x: vaakaPiste + SIVU_MARGIN,
                     y: pystyPiste
                 }
             });
-            console.dir("solmun jeison jälkeen: " + JSON.stringify(solmu.json()));
+            // console.dir("solmun jeison jälkeen: " + JSON.stringify(solmu.json()));
 
             edellisenVanhempiSuhde = vanhempiSuhde;
 
@@ -545,50 +565,118 @@ function valitseVanhemmat() {
     statusbar.textContent = 'Painettu näppäintä "P" (parents): valitaan vanhemmat ja vanhempisuhteet valitulle solmulle.';
 }
 
+function getSyvinSyvyys() {
+    if (unsafe_global_syvin_syvyys === -1) {
+        unsafe_global_syvin_syvyys = etsiSyvinSyvyys();
+    }
+    return unsafe_global_syvin_syvyys;
+}
+
+function etsiSyvinSyvyys() {
+    let syvinSyvyys = -1;
+
+    const results = cy.elements().depthFirstSearch({
+        roots: cy.nodes().roots(),
+        visit: function (v, e, u, i, depth) {
+            let syvyys = depth + 1;
+
+            if (syvyys > syvinSyvyys) {
+                syvinSyvyys = syvyys;
+            }
+        },
+        directed: true
+    });
+
+    if (syvinSyvyys === -1) {
+        throw Error("Syvyyden hakeminen epäonnistui!");
+    }
+
+    return syvinSyvyys;
+}
+
+function asetaAutoritatiivisetJuuret() {
+    for (const juuri of cy.nodes().roots()) {
+        const results = cy.elements().depthFirstSearch({
+            roots: juuri,
+            visit: function (v, e, u, i, depth) {
+                let syvyys = depth + 1;
+
+                if (syvyys === getSyvinSyvyys()) {
+                    juuri.scratch()._itse.henkilo.syvinSolmu = true;
+                }
+            },
+            directed: true
+        });
+    }
+}
+
 async function juusoSearch() {
     statusbar.textContent = 'Painettu näppäintä "J" (Juuso): juuso juuso';
+    asetaAutoritatiivisetJuuret();
     const valitutJuuret = cy.nodes(":selected");
     if (valitutJuuret.length === 0) {
         statusbar.textContent = 'Painettu näppäintä "J" (Juuso): Tyhjä valinta! Joku solmu tai joukko solmuja vaaditaan.';
         return;
     }
 
-    let syvinSyvyys = -1;
     let syvyys = -1;
     let polut = [];
-    const samanSyvyydenSuhteet = new Map();
+    const samanSyvyydenSuhteet = new Map();  // alustetaan Map, jonka sisälle tallennetaan taulukoita (että voidaan katsoa onko solmussa jo käyty)
     for (const juuri of valitutJuuret) {
         const results = cy.elements().breadthFirstSearch({
             roots: juuri,
             visit: function (v, e, u, i, depth) {
 
                 // käydään läpi kaikki solmut
-
                 syvyys = depth + 1;
-                console.log(`vieraillaan järjestyksessä: ${i}, syvyys: ${syvyys}, syvinSyvyys: ${syvinSyvyys}, id: ${v.id()}`);
+                let extraLog = "";
 
-                if (syvyys % 2 === 0) {  // suhde-solmut parillisia, asetetaan niiden perusteella ryhmä
-                    let nykymäärä = 1;
-                    if (samanSyvyydenSuhteet.get(syvyys) != null) {
-                        nykymäärä = samanSyvyydenSuhteet.get(syvyys) + 1;
+                if (syvyys % 2 === 0) {
+
+                    // käsitellään suhde-solmut (niiden perusteella määritetään ryhmä)
+
+                    // kun juuri ei ole syvin, ei voida täyttää tietoa vaan levitettävä tieto suhteen vanhemmalle
+                    if (!juuri.scratch()._itse.henkilo.syvinSolmu) {
+                        let todellinenSyvyys = v.scratch()._itse.suhde.todellinenSyvyys;
+                        u.scratch()._itse.henkilo.syvyys = todellinenSyvyys - 1;  // u eli edellinen solmu (henkilö koska saavuttu suhteeseen)
+                        extraLog = `Asetettu ->${u.scratch()._itse.henkilo.nimi} todellinenSyvyys: ${todellinenSyvyys}`;
                     }
-                    v.scratch()._itse.suhde.ryhmä = nykymäärä;
-                    samanSyvyydenSuhteet.set(nykymäärä);
+
+                    // kun juuri on syvin, täytetään tieto suhteen ryhmästä ja todellisesta syvyydestä
+                    let suhdeId = v.scratch()._itse.suhde.suhdeId;
+
+                    if (samanSyvyydenSuhteet.get(syvyys) != null) {  // tässä syvyydessä jo käyty jos mapin taulukko sillä kohdalla jo olemassa
+                        var suhteetTaulukko = samanSyvyydenSuhteet.get(syvyys);
+                        let suhteenI = suhteetTaulukko.findIndex(e => e === suhdeId);
+                        if (suhteenI === -1) {
+                            suhteetTaulukko.push(suhdeId);
+                            var suhteenRyhmä = suhteetTaulukko.length;
+                        } else {
+                            suhteenRyhmä = suhteenI + 1;  // aloitetaan ryhmittely ykkösestä
+                        }
+                    }
+                    else {
+                        samanSyvyydenSuhteet.set(syvyys, [suhdeId]);
+                        suhteenRyhmä = 1;
+                    }
+                    v.scratch()._itse.suhde.ryhmä = suhteenRyhmä;
+                    v.scratch()._itse.suhde.todellinenSyvyys = syvyys;
+
                 } else {
+
+                    // käsitellään henkilo solmut (niiden perusteella määrittyy syvyys)
+
                     v.scratch()._itse.henkilo.syvyys = syvyys;
+
                 }
 
-                if (syvyys > syvinSyvyys) {
-                    syvinSyvyys = syvyys;
-                }
+                console.log(`vieraillaan järjestyksessä: ${i}, syvyys: ${syvyys}, suhteenRyhmä: ${suhteenRyhmä}, id: ${v.id()} ${extraLog}`);
             },
             directed: true
         });
 
         polut.push(results.path);
     }
-
-    statusbar.textContent = "Saatu syvin syvyys on: " + syvinSyvyys;
 
     animoiPolut(polut);
 }
