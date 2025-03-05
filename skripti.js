@@ -77,6 +77,7 @@ const SUHTEEN_MARGIN = 50;
 var unsafe_global_syvin_syvyys = -1;
 var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 var statusbar;
+var suhteitaPerSyvyys = new Map();
 
 class Henkilo {
     constructor(nimi, vanhempiSuhteet, lapsiSuhteet, syvyys) {
@@ -114,6 +115,7 @@ const henkilodata = [
     new Henkilo("hlö20", [], [], 1),     // 20
     new Henkilo("hlö21", [], [], 1),     // 21
     new Henkilo("hlö22", [], [], 3),     // 22
+    new Henkilo("hlö23", [], [], 3),     // 23
 ];
 
 class Suhde {
@@ -166,7 +168,7 @@ const suhdeData = [
     new Suhde(
         105, "avioliitto", true,
         [henkilodata[20], henkilodata[21]],
-        [henkilodata[16], henkilodata[22]], 3)
+        [henkilodata[16], henkilodata[22], henkilodata[23]], 3)
 ];
 henkilodata[0].vanhempiSuhteet.push(null); /*               */ henkilodata[0].lapsiSuhteet.push(suhdeData[0]);
 henkilodata[1].vanhempiSuhteet.push(null); /*               */ henkilodata[1].lapsiSuhteet.push(suhdeData[0]);
@@ -191,6 +193,7 @@ henkilodata[19].vanhempiSuhteet.push(suhdeData[4]);
 henkilodata[20].vanhempiSuhteet.push(null); /*              */ henkilodata[20].lapsiSuhteet.push(suhdeData[5]);
 henkilodata[21].vanhempiSuhteet.push(null); /*              */ henkilodata[21].lapsiSuhteet.push(suhdeData[5]);
 henkilodata[22].vanhempiSuhteet.push(suhdeData[5]);
+henkilodata[23].vanhempiSuhteet.push(suhdeData[5]);
 
 /*
 
@@ -506,11 +509,12 @@ function asetaGraafinPositiot(solmut) {
             }
 
             let henkilönVaakaPiste;
+            const randomLeveys = Math.floor(Math.random() * 20);
             try {
                 const kerroin = monesko / (monesta + 1);  // monesko == min. 0, monesta == max. x-1 ettei piirretä yli oman alueen
                 henkilönVaakaPiste = (kerroin * (NAYTON_LEVEYS / NO_OF_GROUPS));
                 var ryhmänVaakaPiste = laskeRyhmänVaakaPiste(haeHenkilonRyhmä(henkilo));
-                vaakaPiste = ryhmänVaakaPiste + henkilönVaakaPiste;
+                vaakaPiste = ryhmänVaakaPiste + henkilönVaakaPiste + randomLeveys;
             } catch (e) {
                 vaakaPiste = ryhmänVaakaPiste + (monesko * 10);
             }
@@ -544,7 +548,23 @@ function asetaGraafinPositiot(solmut) {
 
 function haeHenkilonRyhmä(henkilo) {
     if (henkilo.vanhempiSuhteet[0] != null) {
-        return henkilo.vanhempiSuhteet[0].ryhmä;
+        return henkilo.vanhempiSuhteet[0].ryhmä;  // hyvä oletus hakea vanhemman ryhmä
+    }
+
+    let henkilonSyvyys = henkilo.syvyys;
+
+    if (suhteitaPerSyvyys.size >= 1) {  // jos olemassa map, käytetään sitä
+
+        if (henkilonSyvyys === 1) {  // juurisolmuille oma käsittely, jossa katsotaan lapsia sisältävä suhde
+            let suhteetTaulukko = suhteitaPerSyvyys.get(henkilonSyvyys + 1);
+            for (suhdeId of suhteetTaulukko) {
+                if (suhdeId === henkilo.lapsiSuhteet[0].suhdeId) {
+                    return suhteetTaulukko.findIndex(e => e === suhdeId);
+                }
+            }
+        }
+
+        return suhteitaPerSyvyys.get(henkilonSyvyys - 1).length + 1;  // jos ei vanhempaa, haetaan yllä olevien suhteiden määrä + 1
     }
 
     return henkilo.lapsiSuhteet[0].ryhmä;
@@ -654,9 +674,9 @@ async function juusoSearch() {
         polut.push(results.path);
     }
 
-    const samanSyvyydenSuhteet = new Map();  // alustetaan Map, jonka sisälle tallennetaan taulukoita (että voidaan katsoa onko solmussa jo käyty)
+    suhteitaPerSyvyys = new Map();  // määritäLeveydetSolmustaAlavirtaan() käyttää tätä, joten tyhjätään ettei vanhaa dataa!
     for (const juuri of valitutJuuret) {
-        const results = määritäLeveydetSolmustaAlavirtaan(juuri, samanSyvyydenSuhteet);
+        const results = määritäLeveydetSolmustaAlavirtaan(juuri);
         polut.push(results.path);
     }
 
@@ -680,7 +700,7 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
                 // kun juuri ei ole syvin, ei voida täyttää tietoa vaan levitettävä tieto suhteen vanhemmalle
                 const todellinenSyvyys = v.scratch()._itse.suhde.todellinenSyvyys;
                 if (isNumber(todellinenSyvyys)) {
-                    korjaaSyvyydetYlävirtaan(u, todellinenSyvyys);
+                    korjaaSyvyydetYlävirtaan(u, todellinenSyvyys - 1);
                 }
 
             }
@@ -694,37 +714,38 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
     return results;
 }
 
-function korjaaSyvyydetYlävirtaan(u, todellinenSyvyys) {  // onko hämäävää nimittää u:ksi? Nythän kyseessä olisi v=nykyinen...
-    const nykyinenSyvyys = todellinenSyvyys - 1;  // miinus yksi, koska noustiin yksi ylävirtaan
-    u.scratch()._itse.henkilo.syvyys = nykyinenSyvyys;
+function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, vaikka tultiinkin tänne u:na (edellinen solmu)
+    v.scratch()._itse.henkilo.syvyys = todellinenSyvyys;
 
-    const incomers = u.incomers().nodes();
+    const incomers = v.incomers().nodes();
     if (incomers == null || incomers.length === 0) {  // poistutaan, jos tällä ei ole suhdesolmua
         return;
     }
 
     const suhdeSolmu = incomers[0];  // vain ensimmäinen alkio järkevä, koska kaari tulee suhdesolmusta
-
-    suhdeSolmu.scratch()._itse.suhde.todellinenSyvyys = nykyinenSyvyys - 1;  // suhde-solmun korkeus vielä nykyistäkin korkeampi
+    const suhdeSolmunSyvyys = todellinenSyvyys - 1;  // suhde-solmun korkeus nykyistä (v) korkeampi yhdellä
+    suhdeSolmu.scratch()._itse.suhde.todellinenSyvyys = suhdeSolmunSyvyys;
 
     for (const lapsi of suhdeSolmu.outgoers().nodes()) {
-        if (lapsi === u) {
+        if (lapsi === v) {
             continue;  // ei korjata itsestä alas: mentäisiin sinne, mistä on tultu!
         }
 
-        määritäSyvyydetSolmustaAlavirtaan(lapsi, true, nykyinenSyvyys);  // syvyys suhteen perusteella, koska lisätään aina 1 aloittaessa kumminkin
+        määritäSyvyydetSolmustaAlavirtaan(lapsi, true, suhdeSolmunSyvyys);  // syvyys suhteen perusteella, koska syvyyteen lisätään aina 1 aloittaessa
     }
 
-    const uunVanhemmat = suhdeSolmu.incomers().nodes();
-    for (const uunVanhempi of uunVanhemmat) {
-        korjaaSyvyydetYlävirtaan(uunVanhempi, nykyinenSyvyys);
+    const veenVanhemmat = suhdeSolmu.incomers().nodes();
+    for (const veenVanhempi of veenVanhemmat) {
+        korjaaSyvyydetYlävirtaan(veenVanhempi, suhdeSolmunSyvyys - 1);  // vanhempien korkeus on vielä yksi suhteesta ylöspäin
     }
 }
 
 /**
  * Tämän algoritmin pitää määrittää suhteen "leveys" eli ryhmä. Käytännössä se tehdään katsomalla onko samalla korkeudella jo muita suhdesolmuja ja määrittämällä oikea määrä sen perusteella.
  */
-function määritäLeveydetSolmustaAlavirtaan(juuri, samanSyvyydenSuhteet) {
+function määritäLeveydetSolmustaAlavirtaan(juuri) {
+    // suhteitaPerSyvyys (Map) tallentaa avaimena syvyyden ja arvona tulukon suhteita, esim.
+    //      (   { key: 2, value: ["205", "605"]},   { key: 4, value: ["953", "200"]}   )
     const results = cy.elements().breadthFirstSearch({
         roots: juuri,
         visit: function (v, e, u, i, depth) {
@@ -744,8 +765,8 @@ function määritäLeveydetSolmustaAlavirtaan(juuri, samanSyvyydenSuhteet) {
 
             let suhdeId = v.scratch()._itse.suhde.suhdeId;
 
-            if (samanSyvyydenSuhteet.get(syvyys) != null) {  // tässä syvyydessä jo käyty jos mapin taulukko sillä kohdalla jo olemassa
-                var suhteetTaulukko = samanSyvyydenSuhteet.get(syvyys);
+            if (suhteitaPerSyvyys.get(syvyys) != null) {  // tässä syvyydessä jo käyty jos mapin taulukko sillä kohdalla jo olemassa
+                var suhteetTaulukko = suhteitaPerSyvyys.get(syvyys);
                 let suhteenI = suhteetTaulukko.findIndex(e => e === suhdeId);
                 if (suhteenI === -1) {
                     suhteetTaulukko.push(suhdeId);
@@ -755,7 +776,7 @@ function määritäLeveydetSolmustaAlavirtaan(juuri, samanSyvyydenSuhteet) {
                 }
             }
             else {
-                samanSyvyydenSuhteet.set(syvyys, [suhdeId]);
+                suhteitaPerSyvyys.set(syvyys, [suhdeId]);
                 suhteenRyhmä = 1;
             }
             v.scratch()._itse.suhde.ryhmä = suhteenRyhmä;
