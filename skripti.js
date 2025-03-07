@@ -78,6 +78,7 @@ var unsafe_global_syvin_syvyys = -1;
 var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
 var statusbar;
 var suhteitaPerSyvyys = new Map();
+var pathsForVisualising = [];
 
 class Henkilo {
     constructor(nimi, vanhempiSuhteet, lapsiSuhteet, syvyys) {
@@ -338,8 +339,8 @@ function luoLeiska(nimi) {
     });
 }
 
-async function animoiPolut(polut) {
-    for (let polku of polut) {
+async function animoiPolut() {
+    for (let polku of pathsForVisualising) {
         let speed = 0.05;
         cy.nodes().unselect();
         for (let askel of polku) {
@@ -509,7 +510,7 @@ function asetaGraafinPositiot(solmut) {
             }
 
             let henkilönVaakaPiste;
-            const randomLeveys = Math.floor(Math.random() * 20);
+            const randomLeveys = Math.floor(Math.random() * 17);
             try {
                 const kerroin = monesko / (monesta + 1);  // monesko == min. 0, monesta == max. x-1 ettei piirretä yli oman alueen
                 henkilönVaakaPiste = (kerroin * (NAYTON_LEVEYS / NO_OF_GROUPS));
@@ -668,25 +669,24 @@ async function juusoSearch() {
         return;
     }
 
-    let polut = [];
+    pathsForVisualising = [];
     for (const juuri of valitutJuuret) {
-        const results = määritäSyvyydetSolmustaAlavirtaan(juuri);
-        polut.push(results.path);
+        määritäSyvyydetSolmustaAlavirtaan(juuri);
     }
 
     suhteitaPerSyvyys = new Map();  // määritäLeveydetSolmustaAlavirtaan() käyttää tätä, joten tyhjätään ettei vanhaa dataa!
     for (const juuri of valitutJuuret) {
-        const results = määritäLeveydetSolmustaAlavirtaan(juuri);
-        polut.push(results.path);
+        määritäLeveydetSolmustaAlavirtaan(juuri);
     }
 
-    animoiPolut(polut);
+    animoiPolut();
 }
 
 function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, lisäSyvyys = 0) {
-    const results = cy.elements().breadthFirstSearch({
+    cy.elements().breadthFirstSearch({
         roots: juuri,
         visit: function (v, e, u, i, depth) {  // v=nykyinen solmu,  u=edellinen solmu,  i=perus i
+            pathsForVisualising.push(v);
             let syvyys = depth + 1 + lisäSyvyys;
 
             if (syvyys % 2 === 0) {  // käsitellään suhde-solmut
@@ -701,6 +701,9 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
                 const todellinenSyvyys = v.scratch()._itse.suhde.todellinenSyvyys;
                 if (isNumber(todellinenSyvyys)) {
                     korjaaSyvyydetYlävirtaan(u, todellinenSyvyys - 1);
+                    // FIXME:  Bugi! Haku pitää pystyä lopettamaan tähän jollain tavalla!
+                    //         Muussa tapauksessa palatessaan kutsusta levittää väärää tietoa.
+                    // return true tai false saattaa toimia... dokumentaatio on tässä sekava!!!
                 }
 
             }
@@ -710,11 +713,10 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
         },
         directed: true
     });
-
-    return results;
 }
 
 function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, vaikka tultiinkin tänne u:na (edellinen solmu)
+    pathsForVisualising.push(v);
     v.scratch()._itse.henkilo.syvyys = todellinenSyvyys;
 
     const incomers = v.incomers().nodes();
@@ -725,6 +727,7 @@ function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, 
     const suhdeSolmu = incomers[0];  // vain ensimmäinen alkio järkevä, koska kaari tulee suhdesolmusta
     const suhdeSolmunSyvyys = todellinenSyvyys - 1;  // suhde-solmun korkeus nykyistä (v) korkeampi yhdellä
     suhdeSolmu.scratch()._itse.suhde.todellinenSyvyys = suhdeSolmunSyvyys;
+    pathsForVisualising.push(suhdeSolmu);
 
     for (const lapsi of suhdeSolmu.outgoers().nodes()) {
         if (lapsi === v) {
@@ -746,9 +749,10 @@ function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, 
 function määritäLeveydetSolmustaAlavirtaan(juuri) {
     // suhteitaPerSyvyys (Map) tallentaa avaimena syvyyden ja arvona tulukon suhteita, esim.
     //      (   { key: 2, value: ["205", "605"]},   { key: 4, value: ["953", "200"]}   )
-    const results = cy.elements().breadthFirstSearch({
+    cy.elements().breadthFirstSearch({
         roots: juuri,
         visit: function (v, e, u, i, depth) {
+            // pathsForVisualising.push(v);
             let syvyys = depth + 1;
 
             // vain parilliset eli suhde-solmut kiinnostavia "leveyden" eli ryhmien näkökulmasta
@@ -784,8 +788,6 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
         },
         directed: true
     });
-
-    return results;
 }
 
 /*
