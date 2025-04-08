@@ -21,7 +21,8 @@ body {
 h1,
 button,
 footer {
-  margin: 1vh;
+  margin-top: 1vh;
+  margin-bottom: 1vh;
   margin-left: 2vw;
   margin-right: 2vw;
 }
@@ -34,4 +35,13 @@ footer {
   font-size: large;
   padding-left: 1vw;
   padding-right: 1vw;
+}
+
+#versio {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: small;
+  margin-left: 2vw;
+  color: gray;
+  position: absolute;
+  right: 5vw;
 }

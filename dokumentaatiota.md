@@ -14,9 +14,8 @@ jotain jotain jotain
 
 ## Ongelma
 - käytettäessä cytoscape.js:n erinomaisia hakualgoritmeja, juuret eivät tiedä millä korkeudella ne ovat
-- jokainen luulee aloittavansa 0:sta
-    - joka tosin tässä korjattu ykköseksi
-        - toisin sanoen sekä syvyys että ryhmä indeksoidaan ykkösestä alkaen eli ne alkavat "1, 2, 3, ...." eivätkä "0, 1, 2, ..."
+- jokainen luulee aloittavansa 0:sta – joka tosin tässä korjattu ykköseksi
+    - (toisin sanoen sekä syvyys että ryhmä indeksoidaan ykkösestä alkaen eli ne alkavat "1, 2, 3, ...." eivätkä "0, 1, 2, ...")
 - tämän takia määäritettävä ensin syvimmät juuret ja käsiteltävä niitä eri tavalla kuin muita juuria
     - jos taas haettaisiin pelkistä syvimmistä juurista käsin, ei saataisi tietoa välitettyä kaikkiin sopukoihin
         - (tosin tämä saattaa muuttua algoritmin, erityisesti "u"-solmu asioiden kehittyessä, pitäisi testata)
@@ -24,7 +23,7 @@ jotain jotain jotain
 
 ## Algoritmi: "määritäSyvyys"
 - jos ollaan syvin juuri, asetetaan *todellinenSyvyys* arvo jokaiselle vastaantulevalle solmulle käyttäen (kirjaston tarjoamaa valmista) breadthFirst tai depthFirst hakua
-    - (tätä ennen ollaan toki määritetty syvimmät juuret käyttäen omaa nopeaa hakuaan)
+    - (tätä ennen ollaan toki määritetty syvimmät juuret käyttäen omaa hakuaan)
     - (ryhmä määritetään sen tiedon perusteella, montako suhdesolmua on samalla syvyydellä - voi olla, että tämä on mahdollista vasta syvyyden määrittämisen jälkeen, että tieto on lopullista)
     - tämän jälkeen jatketaan alavirtaan niin kauan kuin solmuja riittää
 - jos ollaan tavallinen juuri, jatketaan matkaa alas (samassa haussa kuin syvinkin - esim. silmukassa), kunnes jostakin suhde-solmusta löytyy *todellinenSyvyys*

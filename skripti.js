@@ -9,7 +9,7 @@ Muuttujat ja data
 
 */
 
-var cy = cytoscape({
+var cy = cytoscape({  // tämän nimeäminen pienellä poikkeus, joka tuo ilmi säännön
     container: document.getElementById('cy'), // container to render in
     elements: [],
 
@@ -74,11 +74,11 @@ const NAYTON_LEVEYS = 1200;
 const NO_OF_GROUPS = 3;
 const SIVU_MARGIN = 100;
 const SUHTEEN_MARGIN = 50;
-var unsafe_global_syvin_syvyys = -1;
-var previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
-var statusbar;
-var suhteitaPerSyvyys = new Map();
-var pathsForVisualising = [];
+var UNSAFE_GLOBAL_SYVIN_SYVYYS = -1;
+var PREVIOUSLY_REMOVED = [];  // säilötään, että voidaan undo'ata!
+var STATUSBAR;
+var SUHTEITA_PER_SYVYYS = new Map();
+var PATHS_FOR_VISUALISING = [];
 
 class Henkilo {
     constructor(nimi, vanhempiSuhteet, lapsiSuhteet, syvyys) {
@@ -206,8 +206,8 @@ Apufunktiot (alustukset, kuuntelijat jne)
 */
 
 function init() {
-    unsafe_global_syvin_syvyys = -1;  // että varmasti lasketaan uudestaan joka kerta kun kutsutaan init()
-    statusbar = document.getElementById("statusbar");
+    UNSAFE_GLOBAL_SYVIN_SYVYYS = -1;  // että varmasti lasketaan uudestaan joka kerta kun kutsutaan init()
+    STATUSBAR = document.getElementById("statusbar");
     let breadthfirstLeiska = luoLeiska("preset");
     breadthfirstLeiska.run();
 
@@ -228,24 +228,24 @@ function init() {
 function nappaimienKuuntelija(event) {
     if (event.code === "Delete") {
         const nodet = cy.nodes(":selected");
-        previouslyRemoved.push(cy.remove(nodet));  // käyttää jquery-mäisiä selectoreita (mutta ei itse jqueryä - riippuvuukseton)
+        PREVIOUSLY_REMOVED.push(cy.remove(nodet));  // käyttää jquery-mäisiä selectoreita (mutta ei itse jqueryä - riippuvuukseton)
         return;
     }
     if (event.code === "Backspace") {
         let edget = cy.edges(":selected");
-        previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        PREVIOUSLY_REMOVED.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
         return;
     }
 
     if (event.code === "KeyZ" && event.ctrlKey) {
-        if (previouslyRemoved.length === 0) {
+        if (PREVIOUSLY_REMOVED.length === 0) {
             return;
         }
-        previouslyRemoved.pop().restore();
+        PREVIOUSLY_REMOVED.pop().restore();
     }
 
     if (event.code === "KeyA") {
-        statusbar.textContent = 'Painettu näppäintä "A" (all): valitse kaikki solmut.';
+        STATUSBAR.textContent = 'Painettu näppäintä "A" (all): valitse kaikki solmut.';
         cy.elements().select();
     }
 
@@ -254,7 +254,7 @@ function nappaimienKuuntelija(event) {
     }
 
     if (event.code === "KeyL") {
-        statusbar.textContent = 'Painettu näppäintä "L" (leaves): valitse lehdet.';
+        STATUSBAR.textContent = 'Painettu näppäintä "L" (leaves): valitse lehdet.';
         cy.nodes().leaves().select();
     }
 
@@ -296,12 +296,12 @@ function valitsimenKuuntelija(event) {
         // DEBUG LOG valituille, voipi olla että turha
         console.log(`solmu "${valitut.id()}" valittu: ${valitut.scratch()._itse.toString()}`);
         const tiedot = valitut[0].scratch()._itse.toString();
-        statusbar.textContent = tiedot;
+        STATUSBAR.textContent = tiedot;
     }
     else if (valitut.length > 1) {
-        statusbar.textContent = "Valitse vain yksi solmu näyttääksesi tietoja.";
+        STATUSBAR.textContent = "Valitse vain yksi solmu näyttääksesi tietoja.";
     } else {
-        statusbar.textContent = "Valitse solmu näyttääksesi tietoja.";
+        STATUSBAR.textContent = "Valitse solmu näyttääksesi tietoja.";
     }
 }
 
@@ -340,13 +340,13 @@ function luoLeiska(nimi) {
 }
 
 async function animoiPolut() {
-    for (let polku of pathsForVisualising) {
-        let speed = 0.05;
+    for (const polku of PATHS_FOR_VISUALISING) {
+        let speed = 0.01;
         cy.nodes().unselect();
-        for (let askel of polku) {
+        for (const askel of polku) {
             askel.select();
+            speed = speed * 0.25;
             await sleep(speed);
-            speed = speed * 0.92;
         }
         await sleep(0.1);
     }
@@ -477,7 +477,7 @@ function asetaGraafinPositiot(solmut) {
             else {
                 // jos ei vanhempia (juurisolmu), piirretään ensisijaisesti yhdessä olevan suhteen mukaan tai sitten ensimmäisen suhteen
                 let lapsiSuhdeId = null;
-                for (let lapsiSuhde of henkilo.lapsiSuhteet) {
+                for (const lapsiSuhde of henkilo.lapsiSuhteet) {
                     if (lapsiSuhde.yhdessä) {
                         lapsiSuhdeId = lapsiSuhde.suhdeId;
                         break;
@@ -502,7 +502,7 @@ function asetaGraafinPositiot(solmut) {
                 monesta = vanhempiSuhde.lapset.length;
             }
             else {
-                for (let lapsiSuhde of henkilo.lapsiSuhteet) {
+                for (const lapsiSuhde of henkilo.lapsiSuhteet) {
                     if (lapsiSuhde.yhdessä) {
                         monesta = lapsiSuhde.vanhemmat.length;
                     }
@@ -549,26 +549,27 @@ function asetaGraafinPositiot(solmut) {
 
 function haeHenkilonRyhmä(henkilo) {
     if (henkilo.vanhempiSuhteet[0] != null) {
-        return henkilo.vanhempiSuhteet[0].ryhmä;  // hyvä oletus hakea vanhemman ryhmä
+        return henkilo.vanhempiSuhteet[0].ryhmä;  // paras oletus hakea vanhemman ryhmä
     }
 
-    let henkilonSyvyys = henkilo.syvyys;
+    const henkilonSyvyys = henkilo.syvyys;
 
-    if (suhteitaPerSyvyys.size >= 1) {  // jos olemassa map, käytetään sitä
+    if (SUHTEITA_PER_SYVYYS.size < 1) {  // jos ei map tietoa, haetaan lapsien ryhmä  
+        return henkilo.lapsiSuhteet[0].ryhmä;
+    }
 
-        if (henkilonSyvyys === 1) {  // juurisolmuille oma käsittely, jossa katsotaan lapsia sisältävä suhde
-            let suhteetTaulukko = suhteitaPerSyvyys.get(henkilonSyvyys + 1);
-            for (suhdeId of suhteetTaulukko) {
-                if (suhdeId === henkilo.lapsiSuhteet[0].suhdeId) {
-                    return suhteetTaulukko.findIndex(e => e === suhdeId);
-                }
+    // jos olemassa map, käytetään sitä
+    if (henkilonSyvyys === 1) {  // juurisolmuille oma käsittely, jossa katsotaan lapsia sisältävä (s + 1) suhde
+        let suhdeIdTaulukko = SUHTEITA_PER_SYVYYS.get(henkilonSyvyys + 1);
+        for (const suhdeId of suhdeIdTaulukko) {
+            if (suhdeId === henkilo.lapsiSuhteet[0].suhdeId) {
+                const suhteenIndex = suhdeIdTaulukko.findIndex(e => e === suhdeId);
+                return suhteenIndex + 1;
             }
         }
-
-        return suhteitaPerSyvyys.get(henkilonSyvyys - 1).length + 1;  // jos ei vanhempaa, haetaan yllä olevien suhteiden määrä + 1
     }
 
-    return henkilo.lapsiSuhteet[0].ryhmä;
+    return SUHTEITA_PER_SYVYYS.get(henkilonSyvyys - 1).length + 1;  // jos ei vanhempaa, haetaan yllä olevien (s - 1) suhteiden määrä + 1    
 }
 
 function laskeRyhmänVaakaPiste(ryhmä) {
@@ -583,12 +584,12 @@ function laskeRyhmänVaakaKeskiPiste(ryhmä) {
 function selectRoots() {
     let valitut = cy.nodes(":selected");
     if (valitut.length <= 1) {
-        statusbar.textContent = 'Painettu näppäintä "R" (roots): valitse juuret.';
+        STATUSBAR.textContent = 'Painettu näppäintä "R" (roots): valitse juuret.';
         cy.nodes().roots().select();
         return;
     }
 
-    statusbar.textContent = 'Painettu näppäintä "R" (roots) kokoelmalle solmuja: valitaan juuret tälle joukolle.';
+    STATUSBAR.textContent = 'Painettu näppäintä "R" (roots) kokoelmalle solmuja: valitaan juuret tälle joukolle.';
     valitut.unselect();
     valitut.roots().select();
 }
@@ -596,30 +597,30 @@ function selectRoots() {
 function valitseLapset() {
     let valitut = cy.nodes(":selected");
     if (valitut.length === 0) {
-        statusbar.textContent = 'Painettu näppäintä "K" (kids): Lasten (ja lapsisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
+        STATUSBAR.textContent = 'Painettu näppäintä "K" (kids): Lasten (ja lapsisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
         return;
     }
 
     valitut.outgoers().select();
-    statusbar.textContent = 'Painettu näppäintä "K" (kids): valitaan lapset ja lapsisuhteet valitulle solmulle.';
+    STATUSBAR.textContent = 'Painettu näppäintä "K" (kids): valitaan lapset ja lapsisuhteet valitulle solmulle.';
 }
 
 function valitseVanhemmat() {
     let valitut = cy.nodes(":selected");
     if (valitut.length === 0) {
-        statusbar.textContent = 'Painettu näppäintä "P" (parents): Vanhempien (ja vanhempisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
+        STATUSBAR.textContent = 'Painettu näppäintä "P" (parents): Vanhempien (ja vanhempisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!';
         return;
     }
 
     valitut.incomers().select();
-    statusbar.textContent = 'Painettu näppäintä "P" (parents): valitaan vanhemmat ja vanhempisuhteet valitulle solmulle.';
+    STATUSBAR.textContent = 'Painettu näppäintä "P" (parents): valitaan vanhemmat ja vanhempisuhteet valitulle solmulle.';
 }
 
 function getSyvinSyvyys() {
-    if (unsafe_global_syvin_syvyys === -1) {
-        unsafe_global_syvin_syvyys = etsiSyvinSyvyys();
+    if (UNSAFE_GLOBAL_SYVIN_SYVYYS === -1) {
+        UNSAFE_GLOBAL_SYVIN_SYVYYS = etsiSyvinSyvyys();
     }
-    return unsafe_global_syvin_syvyys;
+    return UNSAFE_GLOBAL_SYVIN_SYVYYS;
 }
 
 function etsiSyvinSyvyys() {
@@ -661,20 +662,20 @@ function asetaAutoritatiivisetJuuret() {
 }
 
 async function juusoSearch() {
-    statusbar.textContent = 'Painettu näppäintä "J" (Juuso): juuso juuso';
+    STATUSBAR.textContent = 'Painettu näppäintä "J" (Juuso): juuso juuso';
     asetaAutoritatiivisetJuuret();
     const valitutJuuret = cy.nodes(":selected");
     if (valitutJuuret.length === 0) {
-        statusbar.textContent = 'Painettu näppäintä "J" (Juuso): Tyhjä valinta! Joku solmu tai joukko solmuja vaaditaan.';
+        STATUSBAR.textContent = 'Painettu näppäintä "J" (Juuso): Tyhjä valinta! Joku solmu tai joukko solmuja vaaditaan.';
         return;
     }
 
-    pathsForVisualising = [];
+    PATHS_FOR_VISUALISING = [];
     for (const juuri of valitutJuuret) {
         määritäSyvyydetSolmustaAlavirtaan(juuri);
     }
 
-    suhteitaPerSyvyys = new Map();  // määritäLeveydetSolmustaAlavirtaan() käyttää tätä, joten tyhjätään ettei vanhaa dataa!
+    SUHTEITA_PER_SYVYYS = new Map();  // määritäLeveydetSolmustaAlavirtaan() käyttää tätä, joten tyhjätään ettei vanhaa dataa!
     for (const juuri of valitutJuuret) {
         määritäLeveydetSolmustaAlavirtaan(juuri);
     }
@@ -686,7 +687,7 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
     cy.elements().breadthFirstSearch({
         roots: juuri,
         visit: function (v, e, u, i, depth) {  // v=nykyinen solmu,  u=edellinen solmu,  i=perus i
-            pathsForVisualising.push(v);
+            PATHS_FOR_VISUALISING.push(v);
             let syvyys = depth + 1 + lisäSyvyys;
 
             if (syvyys % 2 === 0) {  // käsitellään suhde-solmut
@@ -716,7 +717,7 @@ function määritäSyvyydetSolmustaAlavirtaan(juuri, isDeepestVaikkeiOlisikaan, 
 }
 
 function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, vaikka tultiinkin tänne u:na (edellinen solmu)
-    pathsForVisualising.push(v);
+    PATHS_FOR_VISUALISING.push(v);
     v.scratch()._itse.henkilo.syvyys = todellinenSyvyys;
 
     const incomers = v.incomers().nodes();
@@ -727,7 +728,7 @@ function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, 
     const suhdeSolmu = incomers[0];  // vain ensimmäinen alkio järkevä, koska kaari tulee suhdesolmusta
     const suhdeSolmunSyvyys = todellinenSyvyys - 1;  // suhde-solmun korkeus nykyistä (v) korkeampi yhdellä
     suhdeSolmu.scratch()._itse.suhde.todellinenSyvyys = suhdeSolmunSyvyys;
-    pathsForVisualising.push(suhdeSolmu);
+    PATHS_FOR_VISUALISING.push(suhdeSolmu);
 
     for (const lapsi of suhdeSolmu.outgoers().nodes()) {
         if (lapsi === v) {
@@ -747,7 +748,7 @@ function korjaaSyvyydetYlävirtaan(v, todellinenSyvyys) {  // v=nykyinen solmu, 
  * Tämän algoritmin pitää määrittää suhteen "leveys" eli ryhmä. Käytännössä se tehdään katsomalla onko samalla korkeudella jo muita suhdesolmuja ja määrittämällä oikea määrä sen perusteella.
  */
 function määritäLeveydetSolmustaAlavirtaan(juuri) {
-    // suhteitaPerSyvyys (Map) tallentaa avaimena syvyyden ja arvona tulukon suhteita, esim.
+    // SUHTEITA_PER_SYVYYS (Map) tallentaa avaimena syvyyden ja arvona tulukon suhteita, esim.
     //      (   { key: 2, value: ["205", "605"]},   { key: 4, value: ["953", "200"]}   )
     cy.elements().breadthFirstSearch({
         roots: juuri,
@@ -769,8 +770,8 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
 
             let suhdeId = v.scratch()._itse.suhde.suhdeId;
 
-            if (suhteitaPerSyvyys.get(syvyys) != null) {  // tässä syvyydessä jo käyty jos mapin taulukko sillä kohdalla jo olemassa
-                var suhteetTaulukko = suhteitaPerSyvyys.get(syvyys);
+            if (SUHTEITA_PER_SYVYYS.get(syvyys) != null) {  // tässä syvyydessä jo käyty jos mapin taulukko sillä kohdalla jo olemassa
+                var suhteetTaulukko = SUHTEITA_PER_SYVYYS.get(syvyys);
                 let suhteenI = suhteetTaulukko.findIndex(e => e === suhdeId);
                 if (suhteenI === -1) {
                     suhteetTaulukko.push(suhdeId);
@@ -780,7 +781,7 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
                 }
             }
             else {
-                suhteitaPerSyvyys.set(syvyys, [suhdeId]);
+                SUHTEITA_PER_SYVYYS.set(syvyys, [suhdeId]);
                 suhteenRyhmä = 1;
             }
             v.scratch()._itse.suhde.ryhmä = suhteenRyhmä;
