@@ -8,6 +8,8 @@ const GroupList = () => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // tämä metodi luokkatyylissä "componentDidMount" eli suoritetaan alustuksen yhteydessä
+  // - tässä asetetaan loading ja datan hakeminen spring apilta window.fetch:llä 
   useEffect(() => {
     setLoading(true);
 
@@ -19,6 +21,7 @@ const GroupList = () => {
       })
   }, []);
 
+  // poistaa id:tä vastaavan datan api:lta ja filtteröi ne pois (~poistaa) myös UI:lta
   const remove = async (id) => {
     await fetch(`/api/group/${id}`, {
       method: 'DELETE',
@@ -36,30 +39,36 @@ const GroupList = () => {
     return <p>Loading...</p>;
   }
 
+  // piirtää yksittäisen "datapisteen" aka rivin tietoineen, Edit ja Delete -nappeineen
   const groupList = groups.map(group => {
     const address = `${group.address || ''} ${group.city || ''} ${group.stateOrProvince || ''}`;
-    return <tr key={group.id}>
-      <td style={{whiteSpace: 'nowrap'}}>{group.name}</td>
-      <td>{address}</td>
-      <td>{group.events.map(event => {
-        return <div key={event.id}>{new Intl.DateTimeFormat('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: '2-digit'
-        }).format(new Date(event.date))}: {event.title}</div>
-      })}</td>
-      <td>
-        <ButtonGroup>
-          <Button size="sm" color="primary" tag={Link} to={"/groups/" + group.id}>Edit</Button>
-          <Button size="sm" color="danger" onClick={() => remove(group.id)}>Delete</Button>
-        </ButtonGroup>
-      </td>
-    </tr>
+    return (
+      <tr key={group.id}>
+        <td style={{ whiteSpace: 'nowrap' }}>{group.name}</td>
+        <td>{address}</td>
+        <td>{group.events.map(event => {
+          return (
+            <div key={event.id}>{new Intl.DateTimeFormat('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: '2-digit'
+            }).format(new Date(event.date))}: {event.title}</div>
+          )
+        })}</td>
+        <td>
+          <ButtonGroup>
+            <Button size="sm" color="primary" tag={Link} to={"/groups/" + group.id}>Edit</Button>
+            <Button size="sm" color="danger" onClick={() => remove(group.id)}>Delete</Button>
+          </ButtonGroup>
+        </td>
+      </tr>
+    );
   });
 
+  // palauttaa GroupList UI komponentin, jossa lista tietoineen 
   return (
     <div>
-      <AppNavbar/>
+      <AppNavbar />
       <Container fluid>
         <div className="float-end">
           <Button color="success" tag={Link} to="/groups/new">Add Group</Button>
@@ -67,15 +76,15 @@ const GroupList = () => {
         <h3>My JUG Tour</h3>
         <Table className="mt-4">
           <thead>
-          <tr>
-            <th width="20%">Name</th>
-            <th width="20%">Location</th>
-            <th>Events</th>
-            <th width="10%">Actions</th>
-          </tr>
+            <tr>
+              <th width="20%">Name</th>
+              <th width="20%">Location</th>
+              <th>Events</th>
+              <th width="10%">Actions</th>
+            </tr>
           </thead>
           <tbody>
-          {groupList}
+            {groupList}
           </tbody>
         </Table>
       </Container>

@@ -16,6 +16,8 @@ const GroupEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // luokkatyylissä olisi 'componentDidMount' eli alustuksessa, mutta sen lisäksi käytetään 'componentDidUpdate'
+  // tyylillä, jolloin tarkkaillaan id:tä ja setGroupia
   useEffect(() => {
     if (id !== 'new') {
       fetch(`/api/group/${id}`)
@@ -24,12 +26,17 @@ const GroupEdit = () => {
     }
   }, [id, setGroup]);
 
+  // ryhmän jonkin kentän päivittävä funktio, joka hyödyntää "spread" syntaksia (funktiota määritellessä
+  // samannäköinen syntaksi olisi päinvastoin toimiva "rest parameter"), joka levittää taulukon osikseen
   const handleChange = (event) => {
     const { name, value } = event.target
 
     setGroup({ ...group, [name]: value })
   }
 
+  // asynkroninen lomakkeen lähetys, jossa joko lisätään uusi ryhmä 'api/group/idSeJaSe' tai postataan
+  // tyhjä 'api/group' (mitä tekee?), sen jälkeen valittu ryhmä tyhjätään (tarkistettu debuggerista,
+  // että initialFormState todellakin tyhjä)  --  testaa mitä käy jos ei navigoidakaan!!!
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -47,6 +54,7 @@ const GroupEdit = () => {
 
   const title = <h2>{group.id ? 'Edit Group' : 'Add Group'}</h2>;
 
+  // piirtää ryhmän muokkausnäkymän, jossa submit (Save) kutsuu handleSubmitia
   return (<div>
       <AppNavbar/>
       <Container>

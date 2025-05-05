@@ -9,7 +9,7 @@ Muuttujat ja data
 
 */
 
-var cy = cytoscape({  // tämän nimeäminen pienellä poikkeus, joka tuo ilmi säännön
+let cy = cytoscape({  // tämän nimeäminen pienellä poikkeus, joka tuo ilmi säännön
     container: document.getElementById('cy'), // container to render in
     elements: [],
 
@@ -74,11 +74,11 @@ const NAYTON_LEVEYS = 1200;
 const NO_OF_GROUPS = 3;
 const SIVU_MARGIN = 100;
 const SUHTEEN_MARGIN = 50;
-var UNSAFE_GLOBAL_SYVIN_SYVYYS = -1;
-var PREVIOUSLY_REMOVED = [];  // säilötään, että voidaan undo'ata!
-var STATUSBAR;
-var SUHTEITA_PER_SYVYYS = new Map();
-var PATHS_FOR_VISUALISING = [];
+let UNSAFE_GLOBAL_SYVIN_SYVYYS = -1;
+let PREVIOUSLY_REMOVED = [];  // säilötään, että voidaan undo'ata!
+let STATUSBAR;
+let SUHTEITA_PER_SYVYYS = new Map();
+let PATHS_FOR_VISUALISING = [];
 
 class Henkilo {
     constructor(nimi, vanhempiSuhteet, lapsiSuhteet, syvyys) {
