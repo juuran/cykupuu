@@ -48,6 +48,7 @@ build/
 
 # production
 /build
+react-ui/node
 
 # misc
 .DS_Store
