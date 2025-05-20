@@ -5,8 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import org.springframework.lang.NonNull;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Henkilo {
@@ -18,7 +20,7 @@ public class Henkilo {
     @OneToMany(mappedBy = "henkilo", // suhteen omistajan tässä 1..n tyylissä käytettävä mappedBy merkintää
             cascade = CascadeType.ALL, //
             orphanRemoval = true)
-    Set<SuhdeLiitos> vanhempiSuhteet;
+    List<SuhdeLiitos> vanhempiSuhteet = new ArrayList<>();
 
     // vaihtoehtoinen tyyli tehdä tämä olisi @ManyToMany, mutta hieman syntaktista sokeria koska:
     // oikeasti RDBMS ei moista tunne, vaan mallintaisi:  Entity  —1..n—>  JoinTable  —n..1—>  Entity
@@ -29,9 +31,11 @@ public class Henkilo {
     @OneToMany(mappedBy = "henkilo", //
             cascade = CascadeType.ALL, //
             orphanRemoval = true)
-    Set<SuhdeLiitos> pariSuhteet;
+    List<SuhdeLiitos> pariSuhteet = new ArrayList<>();
 
+    @NonNull
     String etunimet;
+    @NonNull
     String sukunimet;
 
     public void addVanhempiSuhteet(SuhdeLiitos vanhempiSuhde) {
@@ -93,7 +97,7 @@ public class Henkilo {
             return this;
         }
 
-        public Builder vanhempisuhteet(Set<SuhdeLiitos> vanhempiSuhteet) {
+        public Builder vanhempisuhteet(List<SuhdeLiitos> vanhempiSuhteet) {
             this.builtHenkilo.vanhempiSuhteet = vanhempiSuhteet;
             return this;
         }
@@ -104,7 +108,7 @@ public class Henkilo {
             return this;
         }
 
-        public Builder pariSuhteet(Set<SuhdeLiitos> pariSuhteet) {
+        public Builder pariSuhteet(List<SuhdeLiitos> pariSuhteet) {
             this.builtHenkilo.pariSuhteet = pariSuhteet;
             return this;
         }
@@ -131,28 +135,18 @@ public class Henkilo {
 
     protected Henkilo() { /* vain JPA:lle, ei käytetä */ }
 
-    public Set<SuhdeLiitos> getPariSuhteet() {
-        return pariSuhteet;
+    public Henkilo(@NonNull String etunimet, @NonNull String sukunimet) {
+        this.etunimet = etunimet;
+        this.sukunimet = sukunimet;
     }
 
-    public void setPariSuhteet(Set<SuhdeLiitos> pariSuhteet) {
+    public Henkilo(List<SuhdeLiitos> pariSuhteet, Long id, List<SuhdeLiitos> vanhempiSuhteet, String etunimet,
+            String sukunimet) {
         this.pariSuhteet = pariSuhteet;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
         this.id = id;
-    }
-
-    public Set<SuhdeLiitos> getVanhempiSuhteet() {
-        return vanhempiSuhteet;
-    }
-
-    public void setVanhempiSuhteet(Set<SuhdeLiitos> vanhempiSuhteet) {
         this.vanhempiSuhteet = vanhempiSuhteet;
+        this.etunimet = etunimet;
+        this.sukunimet = sukunimet;
     }
 
     public String getEtunimet() {
@@ -163,12 +157,42 @@ public class Henkilo {
         this.etunimet = etunimet;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public List<SuhdeLiitos> getVanhempiSuhteet() {
+        return vanhempiSuhteet;
+    }
+
+    public void setVanhempiSuhteet(List<SuhdeLiitos> vanhempiSuhteet) {
+        this.vanhempiSuhteet = vanhempiSuhteet;
+    }
+
+    public List<SuhdeLiitos> getPariSuhteet() {
+        return pariSuhteet;
+    }
+
+    public void setPariSuhteet(List<SuhdeLiitos> pariSuhteet) {
+        this.pariSuhteet = pariSuhteet;
+    }
+
     public String getSukunimet() {
         return sukunimet;
     }
 
     public void setSukunimet(String sukunimet) {
         this.sukunimet = sukunimet;
+    }
+
+    @Override
+    public String toString() {
+        return "Henkilo{" + "id=" + id + ", vanhempiSuhteet=" + vanhempiSuhteet + ", pariSuhteet=" + pariSuhteet + ","
+                + " etunimet='" + etunimet + '\'' + ", sukunimet='" + sukunimet + '\'' + '}';
     }
 
 }

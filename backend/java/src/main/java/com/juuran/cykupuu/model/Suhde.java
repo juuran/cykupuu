@@ -8,7 +8,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Suhde {
@@ -19,11 +20,11 @@ public class Suhde {
 
     @OneToMany
     @JoinColumn(name = "henkilo_id")
-    Set<SuhdeLiitos> ylavirtaLiitokset;
+    List<SuhdeLiitos> ylavirtaLiitokset = new ArrayList<>();
 
     @OneToMany
     @JoinColumn(name = "henkilo_id")
-    Set<SuhdeLiitos> alavirtaLiitokset;
+    List<SuhdeLiitos> alavirtaLiitokset = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "suhdetyyppi_id")
@@ -53,6 +54,11 @@ public class Suhde {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        return "Suhde{" + "id=" + id + ", ylavirtaLiitokset=" + ylavirtaLiitokset + ", alavirtaLiitokset=" + alavirtaLiitokset + ", suhdeTyyppi=" + suhdeTyyppi + ", onkoYhdessa=" + onkoYhdessa + ", onkoNaimisissa=" + onkoNaimisissa + '}';
     }
 
     public static class Builder {
@@ -86,10 +92,11 @@ public class Suhde {
 
         public Builder suhdeTyyppi(SuhdeTyyppi suhdeTyyppi) {
             this.builtSuhde.suhdeTyyppi = suhdeTyyppi;
+            suhdeTyyppi.addSuhde(this.builtSuhde);  // lisätään syntymässä oleva Suhde jo SuhdeTyyppiin
             return this;
         }
 
-        public Builder ylavirtaLiitokset(Set<SuhdeLiitos> pariSuhdeLiitokset) {
+        public Builder ylavirtaLiitokset(List<SuhdeLiitos> pariSuhdeLiitokset) {
             this.builtSuhde.ylavirtaLiitokset = pariSuhdeLiitokset;
             return this;
         }
@@ -100,7 +107,7 @@ public class Suhde {
             return this;
         }
 
-        public Builder alavirtaLiitokset(Set<SuhdeLiitos> vanhempiSuhdeLiitokset) {
+        public Builder alavirtaLiitokset(List<SuhdeLiitos> vanhempiSuhdeLiitokset) {
             this.builtSuhde.alavirtaLiitokset = vanhempiSuhdeLiitokset;
             return this;
         }
@@ -120,6 +127,10 @@ public class Suhde {
      */
 
 
+
+
+
+
     /*
      * .........................................................................................
      * Tästä alas ei mitään kiinnostavaa – vain generoidut (konstruktori, getterit, setterit...)
@@ -128,22 +139,22 @@ public class Suhde {
 
     protected Suhde() { /* vain JPA:lle, ei käytetä */ }
 
-    public Suhde(SuhdeTyyppi suhdeTyyppi, Long id, Set<SuhdeLiitos> ylavirtaLiitokset,
-            Set<SuhdeLiitos> alavirtaLiitokset, Boolean onkoYhdessa, Boolean onkoNaimisissa) {
-        this.suhdeTyyppi = suhdeTyyppi;
+    public Suhde(Boolean onkoYhdessa, Long id, List<SuhdeLiitos> ylavirtaLiitokset, List<SuhdeLiitos> alavirtaLiitokset,
+            SuhdeTyyppi suhdeTyyppi, Boolean onkoNaimisissa) {
+        this.onkoYhdessa = onkoYhdessa;
         this.id = id;
         this.ylavirtaLiitokset = ylavirtaLiitokset;
         this.alavirtaLiitokset = alavirtaLiitokset;
-        this.onkoYhdessa = onkoYhdessa;
+        this.suhdeTyyppi = suhdeTyyppi;
         this.onkoNaimisissa = onkoNaimisissa;
     }
 
-    public Boolean getOnkoYhdessa() {
-        return onkoYhdessa;
+    public List<SuhdeLiitos> getAlavirtaLiitokset() {
+        return alavirtaLiitokset;
     }
 
-    public void setOnkoYhdessa(Boolean onkoYhdessa) {
-        this.onkoYhdessa = onkoYhdessa;
+    public void setAlavirtaLiitokset(List<SuhdeLiitos> alavirtaLiitokset) {
+        this.alavirtaLiitokset = alavirtaLiitokset;
     }
 
     public Long getId() {
@@ -154,20 +165,12 @@ public class Suhde {
         this.id = id;
     }
 
-    public Set<SuhdeLiitos> getYlavirtaLiitokset() {
+    public List<SuhdeLiitos> getYlavirtaLiitokset() {
         return ylavirtaLiitokset;
     }
 
-    public void setYlavirtaLiitokset(Set<SuhdeLiitos> ylavirtaLiitokset) {
+    public void setYlavirtaLiitokset(List<SuhdeLiitos> ylavirtaLiitokset) {
         this.ylavirtaLiitokset = ylavirtaLiitokset;
-    }
-
-    public Set<SuhdeLiitos> getAlavirtaLiitokset() {
-        return alavirtaLiitokset;
-    }
-
-    public void setAlavirtaLiitokset(Set<SuhdeLiitos> alavirtaLiitokset) {
-        this.alavirtaLiitokset = alavirtaLiitokset;
     }
 
     public SuhdeTyyppi getSuhdeTyyppi() {
@@ -176,6 +179,14 @@ public class Suhde {
 
     public void setSuhdeTyyppi(SuhdeTyyppi suhdeTyyppi) {
         this.suhdeTyyppi = suhdeTyyppi;
+    }
+
+    public Boolean getOnkoYhdessa() {
+        return onkoYhdessa;
+    }
+
+    public void setOnkoYhdessa(Boolean onkoYhdessa) {
+        this.onkoYhdessa = onkoYhdessa;
     }
 
     public Boolean getOnkoNaimisissa() {

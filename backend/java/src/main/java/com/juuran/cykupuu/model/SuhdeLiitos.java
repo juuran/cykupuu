@@ -54,11 +54,24 @@ public class SuhdeLiitos {
 
     protected SuhdeLiitos() { /* vain JPA:lle, ei käytetä */ }
 
-    public SuhdeLiitos(Boolean onkoBiologinen, Suhde suhde, Henkilo henkilo, SuhdeLiitosKey id) {
+    /**
+     * Konstuktori, jota käytetään kun kyseessä <strong>parisuhteen</strong> liitos.
+     */
+    public SuhdeLiitos(Henkilo henkilo, Suhde suhde) {
+        this.onkoBiologinen = null;
+        this.henkilo = henkilo;
+        this.suhde = suhde;
+        this.id = new SuhdeLiitosKey(henkilo.getId(), suhde.getId());
+    }
+
+    /**
+     * Konstruktori, jota käytetään kun kyseessä <strong>lapsen</strong> liitos (vanhempi)suhteeseen.
+     */
+    public SuhdeLiitos(Boolean onkoBiologinen, Suhde suhde, Henkilo henkilo) {
         this.onkoBiologinen = onkoBiologinen;
         this.suhde = suhde;
         this.henkilo = henkilo;
-        this.id = id;
+        this.id = new SuhdeLiitosKey(henkilo.getId(), suhde.getId());
     }
 
     public Suhde getSuhde() {
@@ -91,5 +104,10 @@ public class SuhdeLiitos {
 
     public void setOnkoBiologinen(Boolean onkoBiologinen) {
         this.onkoBiologinen = onkoBiologinen;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + henkilo.getId() + "->" + suhde.getId() + ", biologinen?=" + onkoBiologinen + ')';
     }
 }

@@ -1,7 +1,7 @@
 package com.juuran.cykupuu.web;
 
 import com.juuran.cykupuu.model.Henkilo;
-import com.juuran.cykupuu.model.HenkiloRepository;
+import com.juuran.cykupuu.repository.HenkiloRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
