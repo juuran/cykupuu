@@ -1,12 +1,13 @@
 package com.juuran.cykupuu.model;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,33 +19,19 @@ public class Suhde {
     @GeneratedValue
     Long id;
 
-    @OneToMany
-    @JoinColumn(name = "henkilo_id")
+    @OneToMany(fetch = jakarta.persistence.FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     List<SuhdeLiitos> ylavirtaLiitokset = new ArrayList<>();
 
-    @OneToMany
-    @JoinColumn(name = "henkilo_id")
+    @OneToMany(fetch = jakarta.persistence.FetchType.EAGER)
     List<SuhdeLiitos> alavirtaLiitokset = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "suhdetyyppi_id")
     SuhdeTyyppi suhdeTyyppi;
 
     Boolean onkoYhdessa;
     Boolean onkoNaimisissa;
-
-    @Override
-    public boolean equals(Object o) {
-        if ( !(o instanceof Suhde suhde) ) {
-            return false;
-        }
-        return id != null && id.equals(suhde.getId());
-    }
-
-    @Override
-    public int hashCode() { // hashCode must be a constant value for equality to follow all entity state transitions
-        return getClass().hashCode();
-    }
 
     /*
      * =====================================
@@ -90,12 +77,6 @@ public class Suhde {
             return this;
         }
 
-        public Builder suhdeTyyppi(SuhdeTyyppi suhdeTyyppi) {
-            this.builtSuhde.suhdeTyyppi = suhdeTyyppi;
-            suhdeTyyppi.addSuhde(this.builtSuhde);  // lisätään syntymässä oleva Suhde jo SuhdeTyyppiin
-            return this;
-        }
-
         public Builder ylavirtaLiitokset(List<SuhdeLiitos> pariSuhdeLiitokset) {
             this.builtSuhde.ylavirtaLiitokset = pariSuhdeLiitokset;
             return this;
@@ -125,11 +106,6 @@ public class Suhde {
      * Itse tehty staattinen builderi luokka
      * =====================================
      */
-
-
-
-
-
 
     /*
      * .........................................................................................

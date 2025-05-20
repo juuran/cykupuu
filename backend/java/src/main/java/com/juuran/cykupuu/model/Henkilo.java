@@ -17,46 +17,17 @@ public class Henkilo {
     @GeneratedValue
     Long id;
 
-    @OneToMany(mappedBy = "henkilo", // suhteen omistajan tässä 1..n tyylissä käytettävä mappedBy merkintää
-            cascade = CascadeType.ALL, //
-            orphanRemoval = true)
-    List<SuhdeLiitos> vanhempiSuhteet = new ArrayList<>();
-
-    // vaihtoehtoinen tyyli tehdä tämä olisi @ManyToMany, mutta hieman syntaktista sokeria koska:
-    // oikeasti RDBMS ei moista tunne, vaan mallintaisi:  Entity  —1..n—>  JoinTable  —n..1—>  Entity
-    //    @JoinTable( // tämä annotaatio ei pakollinen, mutta mahdollistaa omien nimien käyttämisen tauluissa
-    //            name = "parisuhteet", //
-    //            joinColumns = @JoinColumn(name = "henkilo_id"), //
-    //            inverseJoinColumns = @JoinColumn(name = "suhde_id"))
-    @OneToMany(mappedBy = "henkilo", //
-            cascade = CascadeType.ALL, //
-            orphanRemoval = true)
-    List<SuhdeLiitos> pariSuhteet = new ArrayList<>();
-
     @NonNull
     String etunimet;
+
     @NonNull
     String sukunimet;
 
-    public void addVanhempiSuhteet(SuhdeLiitos vanhempiSuhde) {
-        vanhempiSuhteet.add(vanhempiSuhde);
-        vanhempiSuhde.setHenkilo(this);
-    }
+    @OneToMany(mappedBy = "henkilo", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<SuhdeLiitos> vanhempiSuhteet = new ArrayList<>();
 
-    public void removeVanhempiSuhde(SuhdeLiitos vanhempiSuhde) {
-        vanhempiSuhteet.remove(vanhempiSuhde);
-        vanhempiSuhde.setHenkilo(null);
-    }
-
-    public void addPariSuhde(SuhdeLiitos pariSuhde) {
-        pariSuhteet.add(pariSuhde);
-        pariSuhde.setHenkilo(this);
-    }
-
-    public void removePariSuhde(SuhdeLiitos pariSuhde) {
-        pariSuhteet.remove(pariSuhde);
-        pariSuhde.setHenkilo(null);
-    }
+    @OneToMany(mappedBy = "henkilo", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<SuhdeLiitos> pariSuhteet = new ArrayList<>();
 
     /*
      * =====================================

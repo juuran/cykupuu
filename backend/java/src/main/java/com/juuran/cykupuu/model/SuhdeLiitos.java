@@ -2,7 +2,6 @@ package com.juuran.cykupuu.model;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -15,13 +14,12 @@ public class SuhdeLiitos {
     @EmbeddedId
     SuhdeLiitosKey id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // parempi suorituskyky tällä tyylillä
-    // tällä tavalla kerrotaan eksplisiittesti, että tosiasiassa mäpätään:  Entity/JoinTable  —n..1—>  Entity
+    @ManyToOne()
     @MapsId("henkiloId") // määrittää, mihin @Embeddable luokan kenttään viitataan ja että on FK n..1 suhteessa
     @JoinColumn(name = "henkilo_id") // määrittää tietokannan sarakkeen mihin viitataan
     Henkilo henkilo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @MapsId("suhdeId")
     @JoinColumn(name = "suhde_id")
     Suhde suhde;

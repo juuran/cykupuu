@@ -18,31 +18,10 @@ public class SuhdeTyyppi {
     @GeneratedValue
     Long id;
 
-    // Vladin ohjeesta: https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
-    @OneToMany( //
-            mappedBy = "suhdeTyyppi", // 1..n tapauksessa suhteen omistavan puolen määritettävä mappedBy
-            cascade = CascadeType.ALL, //
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "suhdeTyyppi", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Suhde> suhteet = new ArrayList<>();
 
     String nimike;
-
-    /**
-     * Metodi, jota ainoastaan käytettävä uusien suhteiden lisäämiseksi "suhdetyypit" tauluun.
-     */
-    public void addSuhde(Suhde suhde) {
-        this.suhteet.add(suhde);
-        suhde.setSuhdeTyyppi(this);
-    }
-
-    /**
-     * Metodi, jota ainoastaan käytettävä suhteiden poistamiseksi "suhdetyypit" taulusta. Varmistaa poiston propagoinnin
-     * (cascade).
-     */
-    public void removeSuhde(Suhde suhde) {
-        this.suhteet.remove(suhde);
-        suhde.setSuhdeTyyppi(null);
-    }
 
     /*
      * =====================================
