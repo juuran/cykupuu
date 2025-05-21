@@ -1,7 +1,9 @@
 package com.juuran.cykupuu.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -14,14 +16,16 @@ public class SuhdeLiitos {
     @EmbeddedId
     SuhdeLiitosKey id;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("henkiloId") // määrittää, mihin @Embeddable luokan kenttään viitataan ja että on FK n..1 suhteessa
     @JoinColumn(name = "henkilo_id") // määrittää tietokannan sarakkeen mihin viitataan
+    @JsonBackReference
     Henkilo henkilo;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("suhdeId")
     @JoinColumn(name = "suhde_id")
+    @JsonBackReference
     Suhde suhde;
 
     /**
@@ -33,10 +37,13 @@ public class SuhdeLiitos {
 
     @Override
     public boolean equals(Object o) {
-        if ( !(o instanceof SuhdeLiitos vanhempiSuhde) ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !(o instanceof SuhdeLiitos suhdeLiitos) ) {
             return false;
         }
-        return id != null && id.equals(vanhempiSuhde.getId());
+        return id != null && id.equals(suhdeLiitos.getId());
     }
 
     @Override
@@ -52,19 +59,6 @@ public class SuhdeLiitos {
 
     protected SuhdeLiitos() { /* vain JPA:lle, ei käytetä */ }
 
-    /**
-     * Konstuktori, jota käytetään kun kyseessä <strong>parisuhteen</strong> liitos.
-     */
-    public SuhdeLiitos(Henkilo henkilo, Suhde suhde) {
-        this.onkoBiologinen = null;
-        this.henkilo = henkilo;
-        this.suhde = suhde;
-        this.id = new SuhdeLiitosKey(henkilo.getId(), suhde.getId());
-    }
-
-    /**
-     * Konstruktori, jota käytetään kun kyseessä <strong>lapsen</strong> liitos (vanhempi)suhteeseen.
-     */
     public SuhdeLiitos(Boolean onkoBiologinen, Suhde suhde, Henkilo henkilo) {
         this.onkoBiologinen = onkoBiologinen;
         this.suhde = suhde;
@@ -106,6 +100,13 @@ public class SuhdeLiitos {
 
     @Override
     public String toString() {
-        return "(" + henkilo.getId() + "->" + suhde.getId() + ", biologinen?=" + onkoBiologinen + ')';
+        String tuloste;
+        if ( onkoBiologinen == null ) {  // parisuhde:  henkilö->suhde
+            tuloste = "(" + henkilo.getId() + "->" + suhde.getId() + ')';
+        }
+        else {  // vanhempisuhde:  suhde->henkilö
+            tuloste = "(" + suhde.getId() + "->" + henkilo.getId() + ", biol? " + onkoBiologinen + ')';
+        }
+        return tuloste;
     }
 }

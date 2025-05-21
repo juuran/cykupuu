@@ -1,13 +1,16 @@
 package com.juuran.cykupuu.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import jakarta.persistence.SequenceGenerator;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,22 +19,30 @@ import java.util.List;
 public class Suhde {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "abc")
+    @SequenceGenerator(name = "abc", sequenceName = "abc", initialValue = 100)
     Long id;
 
-    @OneToMany(fetch = jakarta.persistence.FetchType.EAGER)
-    @Fetch(FetchMode.SUBSELECT)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "suhde", cascade = CascadeType.ALL, orphanRemoval = true)
+    @SQLRestriction("onko_biologinen IS NULL")
     List<SuhdeLiitos> ylavirtaLiitokset = new ArrayList<>();
 
-    @OneToMany(fetch = jakarta.persistence.FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "suhde", cascade = CascadeType.ALL, orphanRemoval = true)
+    @SQLRestriction("onko_biologinen IS NOT NULL")
     List<SuhdeLiitos> alavirtaLiitokset = new ArrayList<>();
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "suhdetyyppi_id")
     SuhdeTyyppi suhdeTyyppi;
 
     Boolean onkoYhdessa;
+
     Boolean onkoNaimisissa;
+
+    @Override
+    public String toString() {
+        return "Suhde{" + "id=" + id + ", ylavirtaLiitokset=" + ylavirtaLiitokset + ", alavirtaLiitokset=" + alavirtaLiitokset + ", suhdeTyyppi=" + suhdeTyyppi + ", onkoYhdessa=" + onkoYhdessa + ", onkoNaimisissa=" + onkoNaimisissa + '}';
+    }
 
     /*
      * =====================================
@@ -41,11 +52,6 @@ public class Suhde {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    @Override
-    public String toString() {
-        return "Suhde{" + "id=" + id + ", ylavirtaLiitokset=" + ylavirtaLiitokset + ", alavirtaLiitokset=" + alavirtaLiitokset + ", suhdeTyyppi=" + suhdeTyyppi + ", onkoYhdessa=" + onkoYhdessa + ", onkoNaimisissa=" + onkoNaimisissa + '}';
     }
 
     public static class Builder {

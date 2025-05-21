@@ -1,11 +1,15 @@
 package com.juuran.cykupuu.model;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,66 +19,21 @@ import java.util.List;
 public class SuhdeTyyppi {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bbc")
+    @SequenceGenerator(name = "bbc", sequenceName = "bbc", initialValue = 200)
     Long id;
 
     @OneToMany(mappedBy = "suhdeTyyppi", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Suhde> suhteet = new ArrayList<>();
 
+    @NonNull
+    @Column(unique = true)
     String nimike;
 
-    /*
-     * =====================================
-     * Itse tehty staattinen builderi luokka
-     *
-     */
-
-    public static Builder builder() {
-        return new Builder();
+    public void addSuhde(Suhde suhde) {
+        this.suhteet.add(suhde);
+        suhde.setSuhdeTyyppi(this);
     }
-
-    public static class Builder {
-
-        private SuhdeTyyppi builtSuhdeTyyppi;
-
-        private Builder() {
-            this.builtSuhdeTyyppi = new SuhdeTyyppi();
-        }
-
-        public SuhdeTyyppi build() {
-            SuhdeTyyppi st = this.builtSuhdeTyyppi;
-            this.builtSuhdeTyyppi = null;
-            return st;
-        }
-
-        public Builder id(Long id) {
-            this.builtSuhdeTyyppi.id = id;
-            return this;
-        }
-
-        public Builder suhteet(List<Suhde> suhteet) {
-            this.builtSuhdeTyyppi.suhteet = suhteet;
-            return this;
-        }
-
-        public Builder addSuhde(Suhde suhde) {
-            this.builtSuhdeTyyppi.suhteet.add(suhde);
-            suhde.setSuhdeTyyppi(this.builtSuhdeTyyppi);
-            return this;
-        }
-
-        public Builder nimike(String nimike) {
-            this.builtSuhdeTyyppi.nimike = nimike;
-            return this;
-        }
-
-    }
-
-    /*
-     *
-     * Itse tehty staattinen builderi luokka
-     * =====================================
-     */
 
     /*
      * .........................................................................................
@@ -84,9 +43,8 @@ public class SuhdeTyyppi {
 
     protected SuhdeTyyppi() { /* vain JPA:lle, ei käytetä */ }
 
-    public SuhdeTyyppi(String nimike) {
-        super();
-        this.nimike = nimike;
+    public SuhdeTyyppi(String suhdeNimike) {
+        this.nimike = suhdeNimike;
     }
 
     public List<Suhde> getSuhteet() {
@@ -113,4 +71,8 @@ public class SuhdeTyyppi {
         this.nimike = nimike;
     }
 
+    @Override
+    public String toString() {
+        return "(id=" + id + ", nimike='" + nimike + "')";
+    }
 }

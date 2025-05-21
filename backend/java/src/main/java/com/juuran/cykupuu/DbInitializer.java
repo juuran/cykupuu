@@ -2,7 +2,7 @@ package com.juuran.cykupuu;
 
 import com.juuran.cykupuu.model.Henkilo;
 import com.juuran.cykupuu.model.Suhde;
-import com.juuran.cykupuu.model.SuhdeLiitos;
+import com.juuran.cykupuu.model.SuhdeTyyppi;
 import com.juuran.cykupuu.repository.HenkiloRepository;
 import com.juuran.cykupuu.repository.SuhdeLiitosRepository;
 import com.juuran.cykupuu.repository.SuhdeRepository;
@@ -30,38 +30,65 @@ public class DbInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Henkilo pekka = new Henkilo("Pekka Eevertti", "Ismonperä");
-        Henkilo irmal = new Henkilo("Irmal Irmeli", "Ismonperä");
-        Henkilo eskil = new Henkilo("Eskil Studio", "Ismonperä");
-        pekka = henkiloRepo.save(pekka);
-        irmal = henkiloRepo.save(irmal);
-        eskil = henkiloRepo.save(eskil);
+        Henkilo pekka = henkiloRepo.save(new Henkilo("Pekka Eevertti", "Ismonperä"));
+        Henkilo irmal = henkiloRepo.save(new Henkilo("Irmal Irmeli", "Ismonperä"));
+        Henkilo eskil = henkiloRepo.save(new Henkilo("Eskil Studio", "Ismonperä"));
+        Henkilo jalom = henkiloRepo.save(new Henkilo("Jalomiina", "Ryntäinen"));
+        Henkilo bappe = henkiloRepo.save(new Henkilo("Isä Bappe", "Ryntäinen"));
 
-        Suhde s1 = Suhde.builder().onkoNaimisissa(false).onkoYhdessa(false).build();
-        s1 = suhdeRepo.save(s1);
+        Suhde s1 = suhdeRepo.save(Suhde.builder() //
+                .onkoNaimisissa(false) //
+                .onkoYhdessa(true) //
+                .build() //
+        );
+        Suhde s2 = suhdeRepo.save(Suhde.builder() //
+                .onkoNaimisissa(true) //
+                .onkoYhdessa(true) //
+                .build() //
+        );
+        Suhde s3 = suhdeRepo.save(Suhde.builder() //
+                .onkoNaimisissa(true) //
+                .onkoYhdessa(false) //
+                .build() //
+        );
 
-        SuhdeLiitos sl1 = new SuhdeLiitos(pekka, s1);
-        SuhdeLiitos sl2 = new SuhdeLiitos(irmal, s1);
-        SuhdeLiitos sl3 = new SuhdeLiitos(true, s1, eskil);
-        sl1 = suhdeLiitosRepo.save(sl1);
-        sl2 = suhdeLiitosRepo.save(sl2);
-        sl3 = suhdeLiitosRepo.save(sl3);
+        SuhdeTyyppi st1 = new SuhdeTyyppi("avoliitto");
+        SuhdeTyyppi st2 = new SuhdeTyyppi("avioliitto");
 
-        pekka.setPariSuhteet(List.of(sl1));
-        irmal.setPariSuhteet(List.of(sl2));
-        eskil.setVanhempiSuhteet(List.of(sl3));
+        st1 = suhdeTyyppiRepo.save(st1);
+        st2 = suhdeTyyppiRepo.save(st2);
+        st1.addSuhde(s1);
+        st1.addSuhde(s2);
+        st2.addSuhde(s3);
+        suhdeTyyppiRepo.save(st1);
+        suhdeTyyppiRepo.save(st2);
+
+        pekka.addPariSuhde(s1);
+        irmal.addPariSuhde(s1);
+        eskil.addVanhempiSuhde(s1, true);
+        eskil.addPariSuhde(s2);
+        jalom.addVanhempiSuhde(s3, false);
+        jalom.addPariSuhde(s2);
 
         henkiloRepo.save(pekka);
         henkiloRepo.save(irmal);
         henkiloRepo.save(eskil);
+        henkiloRepo.save(jalom);
+        henkiloRepo.save(bappe);
 
-        System.out.println("Tulostetaan löytyneet:");
-        suhdeRepo.findAll().forEach(System.out::println);
+        System.out.println("*********** Aloitetaan suhteiden hakeminen.");
+        List<Suhde> strings = suhdeRepo.findAll();
+        System.out.println("Tulostetaan löytyneet suhteet:");
+        for (var str : strings) {
+            System.out.println(str);
+        }
 
-        // Okei, tässä on nyt toimiva koodi, joka käyttää eager fetchingiä suhteiden osalta. Se toimii, mutta kyllähän
-        // tuota SQL:ää melkoisen paljon tulee näin yksinkertaisen prosessin tarpeisiin. Voisi siis vielä kokeilla sitä
-        // Vladin systeemiä tähän, mutta vain kohtuullisessa määrin. Rehellisesti tämän tietokannan tai databasen
-        // suorituskyky ei kyllä nyt ole minkäänlainen prioriteetti.
+        System.out.println("*********** Aloitetaan henkilöiden hakeminen.");
+        List<Henkilo> strings2 = henkiloRepo.findAll();
+        System.out.println("Tulostetaan löytyneet henkilöt:");
+        for (var str : strings2) {
+            System.out.println(str);
+        }
     }
 
 }

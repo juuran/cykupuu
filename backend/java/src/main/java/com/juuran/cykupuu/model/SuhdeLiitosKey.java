@@ -2,6 +2,7 @@ package com.juuran.cykupuu.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -45,16 +46,29 @@ public class SuhdeLiitosKey implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if ( o == null || getClass() != o.getClass() )
+    public final boolean equals(Object o) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( o == null ) {
             return false;
+        }
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ?
+                ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() :
+                o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ?
+                ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() :
+                this.getClass();
+        if ( thisEffectiveClass != oEffectiveClass ) {
+            return false;
+        }
         SuhdeLiitosKey that = (SuhdeLiitosKey) o;
-        return Objects.equals(getHenkiloId(), that.getHenkiloId()) && Objects.equals(getSuhdeId(), that.getSuhdeId());
+        return getSuhdeId() != null && Objects.equals(getSuhdeId(),
+                that.getSuhdeId()) && getHenkiloId() != null && Objects.equals(getHenkiloId(), that.getHenkiloId());
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(getHenkiloId(), getSuhdeId());
+    public final int hashCode() {
+        return Objects.hash(suhdeId, henkiloId);
     }
-
 }
