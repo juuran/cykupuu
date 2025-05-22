@@ -791,6 +791,30 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
     });
 }
 
+async function teeAsioitaServerinKanssa() {
+    let henkilot = await getDataFromServer("http://localhost:8080/api/henkilot");
+    let suhteet = await getDataFromServer("http://localhost:8080/api/suhteet");
+
+    console.log(henkilot);
+    console.log(suhteet);
+}
+
+async function getDataFromServer(url) {
+    try {
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Virhettä pukkaa, kuten: ${response.status}.`);
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        alert(`Virhettä pukkasi hakiessa servulta dataa: '${error}'.`)
+    }
+}
+
 /*
 
 
@@ -806,6 +830,8 @@ function main() {
     cy.add(luoSukupuunSuhdeData(suhdeData));
     asetaGraafinPositiot(cy.nodes());
     cy.animate({ pan: { x: -50, y: -50 }, zoom: 1, duration: 300, easing: "ease-in-out" });
+
+    teeAsioitaServerinKanssa();
 }
 
 window.onload = async () => {

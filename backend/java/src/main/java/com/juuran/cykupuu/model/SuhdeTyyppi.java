@@ -1,5 +1,7 @@
 package com.juuran.cykupuu.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,11 +21,13 @@ import java.util.List;
 public class SuhdeTyyppi {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bbc")
-    @SequenceGenerator(name = "bbc", sequenceName = "bbc", initialValue = 200)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sty")
+    @SequenceGenerator(name = "sty", sequenceName = "sty", initialValue = 201)
+    @JsonIgnore
     Long id;
 
     @OneToMany(mappedBy = "suhdeTyyppi", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     List<Suhde> suhteet = new ArrayList<>();
 
     @NonNull
@@ -33,6 +37,11 @@ public class SuhdeTyyppi {
     public void addSuhde(Suhde suhde) {
         this.suhteet.add(suhde);
         suhde.setSuhdeTyyppi(this);
+    }
+
+    @Override
+    public String toString() {
+        return "(\"%s\" [%d])".formatted(nimike, id);
     }
 
     /*
@@ -47,14 +56,6 @@ public class SuhdeTyyppi {
         this.nimike = suhdeNimike;
     }
 
-    public List<Suhde> getSuhteet() {
-        return suhteet;
-    }
-
-    public void setSuhteet(List<Suhde> suhteet) {
-        this.suhteet = suhteet;
-    }
-
     public Long getId() {
         return id;
     }
@@ -63,16 +64,20 @@ public class SuhdeTyyppi {
         this.id = id;
     }
 
+    public List<Suhde> getSuhteet() {
+        return suhteet;
+    }
+
+    public void setSuhteet(List<Suhde> suhteet) {
+        this.suhteet = suhteet;
+    }
+
+    @NonNull
     public String getNimike() {
         return nimike;
     }
 
-    public void setNimike(String nimike) {
+    public void setNimike(@NonNull String nimike) {
         this.nimike = nimike;
-    }
-
-    @Override
-    public String toString() {
-        return "(id=" + id + ", nimike='" + nimike + "')";
     }
 }

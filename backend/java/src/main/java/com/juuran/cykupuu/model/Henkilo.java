@@ -2,13 +2,13 @@ package com.juuran.cykupuu.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.lang.NonNull;
 
@@ -19,8 +19,8 @@ import java.util.List;
 public class Henkilo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hen")
+    @SequenceGenerator(name = "hen", sequenceName = "hen", initialValue = 1)
     Long id;
 
     @NonNull
@@ -124,7 +124,8 @@ public class Henkilo {
 
     @Override
     public String toString() {
-        return "Henkilo{id=" + id + ", nimi='" + etunimet + " " + sukunimet + ", vanhempiSuhteet=" + vanhempiSuhteet + ", pariSuhteet=" + pariSuhteet + "}";
+        return "Henkilo{id=%d, vanhempiSuhteet=%s, pariSuhteet=%s, nimi='%s %s}".formatted(id, vanhempiSuhteet,
+                pariSuhteet, etunimet, sukunimet);
     }
 
     /*

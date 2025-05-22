@@ -1,5 +1,6 @@
 package com.juuran.cykupuu.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,20 +20,23 @@ import java.util.List;
 public class Suhde {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "abc")
-    @SequenceGenerator(name = "abc", sequenceName = "abc", initialValue = 100)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "suh")
+    @SequenceGenerator(name = "suh", sequenceName = "suh", initialValue = 101)
     Long id;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "suhde", cascade = CascadeType.ALL, orphanRemoval = true)
     @SQLRestriction("onko_biologinen IS NULL")
+    @JsonManagedReference
     List<SuhdeLiitos> ylavirtaLiitokset = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "suhde", cascade = CascadeType.ALL, orphanRemoval = true)
     @SQLRestriction("onko_biologinen IS NOT NULL")
+    @JsonManagedReference
     List<SuhdeLiitos> alavirtaLiitokset = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "suhdetyyppi_id")
+    @JsonManagedReference
     SuhdeTyyppi suhdeTyyppi;
 
     Boolean onkoYhdessa;
@@ -41,7 +45,8 @@ public class Suhde {
 
     @Override
     public String toString() {
-        return "Suhde{" + "id=" + id + ", ylavirtaLiitokset=" + ylavirtaLiitokset + ", alavirtaLiitokset=" + alavirtaLiitokset + ", suhdeTyyppi=" + suhdeTyyppi + ", onkoYhdessa=" + onkoYhdessa + ", onkoNaimisissa=" + onkoNaimisissa + '}';
+        return "Suhde{id=%d, ylavirtaLiitokset=%s, alavirtaLiitokset=%s, suhdTyyppi=%s, yhdessa?=%s, naimisissa?=%s}".formatted(
+                id, ylavirtaLiitokset, alavirtaLiitokset, suhdeTyyppi, onkoYhdessa, onkoNaimisissa);
     }
 
     /*
@@ -121,22 +126,12 @@ public class Suhde {
 
     protected Suhde() { /* vain JPA:lle, ei käytetä */ }
 
-    public Suhde(Boolean onkoYhdessa, Long id, List<SuhdeLiitos> ylavirtaLiitokset, List<SuhdeLiitos> alavirtaLiitokset,
-            SuhdeTyyppi suhdeTyyppi, Boolean onkoNaimisissa) {
-        this.onkoYhdessa = onkoYhdessa;
-        this.id = id;
-        this.ylavirtaLiitokset = ylavirtaLiitokset;
-        this.alavirtaLiitokset = alavirtaLiitokset;
+    public SuhdeTyyppi getSuhdeTyyppi() {
+        return suhdeTyyppi;
+    }
+
+    public void setSuhdeTyyppi(SuhdeTyyppi suhdeTyyppi) {
         this.suhdeTyyppi = suhdeTyyppi;
-        this.onkoNaimisissa = onkoNaimisissa;
-    }
-
-    public List<SuhdeLiitos> getAlavirtaLiitokset() {
-        return alavirtaLiitokset;
-    }
-
-    public void setAlavirtaLiitokset(List<SuhdeLiitos> alavirtaLiitokset) {
-        this.alavirtaLiitokset = alavirtaLiitokset;
     }
 
     public Long getId() {
@@ -155,12 +150,12 @@ public class Suhde {
         this.ylavirtaLiitokset = ylavirtaLiitokset;
     }
 
-    public SuhdeTyyppi getSuhdeTyyppi() {
-        return suhdeTyyppi;
+    public List<SuhdeLiitos> getAlavirtaLiitokset() {
+        return alavirtaLiitokset;
     }
 
-    public void setSuhdeTyyppi(SuhdeTyyppi suhdeTyyppi) {
-        this.suhdeTyyppi = suhdeTyyppi;
+    public void setAlavirtaLiitokset(List<SuhdeLiitos> alavirtaLiitokset) {
+        this.alavirtaLiitokset = alavirtaLiitokset;
     }
 
     public Boolean getOnkoYhdessa() {

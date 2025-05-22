@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "suhdeliitokset")
@@ -29,9 +30,9 @@ public class SuhdeLiitos {
     Suhde suhde;
 
     /**
-     * Tämä kenttä koskeaa todellisuudessa vain lapsen <em>kaarta</em> (<em>"edge"</em>) suhteeseen. Vain heidän
-     * kohdallaan mahdollinen <strong>true</strong> arvo. Jos kuvataan muuta kuin lapsen suhdetta, käytetään
-     * <strong>nullia</strong>, esim. puhuttaessa aikuisten välisistä parisuhteista.
+     * Tämä kenttä koskeaa todellisuudessa lapsen suhdetta. Graafiteoriassa lapsen <em>kaarta</em> (<em>"edge"</em>)
+     * suhde-silmuun (<em>"node"</em>). Vain heidän kohdallaan mahdollinen <strong><em>true</em></strong> arvo.
+     * Puhuttaessa aikuisten välisistä parisuhteista käytetään <strong><em>nullia</em></strong>.
      */
     Boolean onkoBiologinen; // oikaistu ja annettu kaikille vaikka tuleekin nullia - ORM mäppäys näin 100 × helpompaa!
 
@@ -51,6 +52,18 @@ public class SuhdeLiitos {
         return getClass().hashCode();
     }
 
+    @Override
+    public String toString() {
+        String tuloste;
+        if ( onkoBiologinen == null ) {  // parisuhde:  henkilö->suhde
+            tuloste = "(%d->%d)".formatted(henkilo.getId(), suhde.getId());
+        }
+        else {  // vanhempisuhde:  suhde->henkilö
+            tuloste = "(%d->%d, biol?=%s)".formatted(suhde.getId(), henkilo.getId(), onkoBiologinen);
+        }
+        return tuloste;
+    }
+
     /*
      * .........................................................................................
      * Tästä alas ei mitään kiinnostavaa – vain generoidut (konstruktori, getterit, setterit...)
@@ -66,12 +79,12 @@ public class SuhdeLiitos {
         this.id = new SuhdeLiitosKey(henkilo.getId(), suhde.getId());
     }
 
-    public Suhde getSuhde() {
-        return suhde;
+    public Boolean getOnkoBiologinen() {
+        return onkoBiologinen;
     }
 
-    public void setSuhde(Suhde suhde) {
-        this.suhde = suhde;
+    public void setOnkoBiologinen(Boolean onkoBiologinen) {
+        this.onkoBiologinen = onkoBiologinen;
     }
 
     public SuhdeLiitosKey getId() {
@@ -90,23 +103,22 @@ public class SuhdeLiitos {
         this.henkilo = henkilo;
     }
 
-    public Boolean getOnkoBiologinen() {
-        return onkoBiologinen;
+    public Suhde getSuhde() {
+        return suhde;
     }
 
-    public void setOnkoBiologinen(Boolean onkoBiologinen) {
-        this.onkoBiologinen = onkoBiologinen;
+    public void setSuhde(Suhde suhde) {
+        this.suhde = suhde;
     }
 
-    @Override
-    public String toString() {
-        String tuloste;
-        if ( onkoBiologinen == null ) {  // parisuhde:  henkilö->suhde
-            tuloste = "(" + henkilo.getId() + "->" + suhde.getId() + ')';
+    @Transient
+    public String getSelite() {
+        if ( onkoBiologinen == null ) {
+            return "PARISUHDE";
         }
-        else {  // vanhempisuhde:  suhde->henkilö
-            tuloste = "(" + suhde.getId() + "->" + henkilo.getId() + ", biol? " + onkoBiologinen + ')';
+        else {
+            return "LAPSISUHDE";
         }
-        return tuloste;
     }
+
 }

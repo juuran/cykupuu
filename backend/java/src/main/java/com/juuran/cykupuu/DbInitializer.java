@@ -4,7 +4,6 @@ import com.juuran.cykupuu.model.Henkilo;
 import com.juuran.cykupuu.model.Suhde;
 import com.juuran.cykupuu.model.SuhdeTyyppi;
 import com.juuran.cykupuu.repository.HenkiloRepository;
-import com.juuran.cykupuu.repository.SuhdeLiitosRepository;
 import com.juuran.cykupuu.repository.SuhdeRepository;
 import com.juuran.cykupuu.repository.SuhdeTyyppiRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -18,20 +17,18 @@ public class DbInitializer implements CommandLineRunner {
     private final HenkiloRepository henkiloRepo;
     private final SuhdeRepository suhdeRepo;
     private final SuhdeTyyppiRepository suhdeTyyppiRepo;
-    private final SuhdeLiitosRepository suhdeLiitosRepo;
 
     public DbInitializer(HenkiloRepository henkiloRepository, SuhdeRepository suhdeRepository,
-            SuhdeTyyppiRepository stRepo, SuhdeLiitosRepository slRepo) {
+            SuhdeTyyppiRepository stRepo) {
         this.henkiloRepo = henkiloRepository;
         this.suhdeRepo = suhdeRepository;
         this.suhdeTyyppiRepo = stRepo;
-        this.suhdeLiitosRepo = slRepo;
     }
 
     @Override
     public void run(String... args) {
         Henkilo pekka = henkiloRepo.save(new Henkilo("Pekka Eevertti", "Ismonperä"));
-        Henkilo irmal = henkiloRepo.save(new Henkilo("Irmal Irmeli", "Ismonperä"));
+        Henkilo irmal = henkiloRepo.save(new Henkilo("Irmal Irmeli", "Ala-Hallava"));
         Henkilo eskil = henkiloRepo.save(new Henkilo("Eskil Studio", "Ismonperä"));
         Henkilo jalom = henkiloRepo.save(new Henkilo("Jalomiina", "Ryntäinen"));
         Henkilo bappe = henkiloRepo.save(new Henkilo("Isä Bappe", "Ryntäinen"));
@@ -69,6 +66,7 @@ public class DbInitializer implements CommandLineRunner {
         eskil.addPariSuhde(s2);
         jalom.addVanhempiSuhde(s3, false);
         jalom.addPariSuhde(s2);
+        bappe.addPariSuhde(s3);
 
         henkiloRepo.save(pekka);
         henkiloRepo.save(irmal);
