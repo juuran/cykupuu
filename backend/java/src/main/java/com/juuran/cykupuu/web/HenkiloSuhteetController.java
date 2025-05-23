@@ -31,8 +31,11 @@ public class HenkiloSuhteetController {
     }
 
     @GetMapping("/henkilot")
-    public List<Henkilo> getAllHenkiloData() {
-        return henkiloRepo.findAll();
+    public HashMap<Long, Henkilo> getAllHenkiloData() {
+        HashMap<Long, Henkilo> map = new HashMap<>();
+        henkiloRepo.findAll().forEach(henkilo -> map.put(henkilo.getId(), henkilo));
+
+        return map;
     }
 
     @GetMapping("/henkilo")

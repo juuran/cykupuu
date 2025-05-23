@@ -396,7 +396,7 @@ function luoSukupuunSuhdeData(suhteet) {
     let suhts = [];
 
     for (const suhde of suhteet) {
-        // luo solmut suhteille
+        // luo **solmut** suhteille
         let tempSuhdeId = suhde.suhdetyyppi + " (" + suhde.suhdeId + ")";
 
         suhts.push({
@@ -413,7 +413,7 @@ function luoSukupuunSuhdeData(suhteet) {
             }
         });
 
-        // luo kaaret suhteen aikuisista suhdetyyppiin
+        // luo **kaaret** suhteen "vanhemmista" suhde-solmuun
         for (const osallinen of suhde.vanhemmat) {
             suhts.push({
                 group: 'edges',
@@ -430,7 +430,7 @@ function luoSukupuunSuhdeData(suhteet) {
             continue;
         }
 
-        // luo kaaret suhdetyyppistä lapsiin
+        // luo **kaaret** suhde-solmusta lapsiin
         for (const lapsi of suhde.lapset) {
             suhts.push({
                 group: 'edges',
@@ -792,26 +792,69 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
 }
 
 async function teeAsioitaServerinKanssa() {
-    let henkilot = await getDataFromServer("http://localhost:8080/api/henkilot");
-    let suhteet = await getDataFromServer("http://localhost:8080/api/suhteet");
+    let onnistui = await yritäHakeaDataa();
+    let aikaleima = new Date().toLocaleTimeString('fi');
 
-    console.log(henkilot);
-    console.log(suhteet);
+    if (!onnistui) {
+        STATUSBAR.textContent = `${aikaleima}: ❌ Yhteys palvelimeen on katkennut, yritetään uudelleen`;
+    }
+
+    for (let i = 0; i < 10 && !onnistui; i++) {
+        onnistui = await yritäHakeaDataa();
+
+        if (onnistui) {
+            break;
+        } else {
+            STATUSBAR.textContent += ".";
+        }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        await sleep(1 * 1000);
+    }
+
+    aikaleima = new Date().toLocaleTimeString('fi');
+    if (onnistui) {
+        STATUSBAR.textContent = `${aikaleima}: ✔️ Tiedot onnistuneesti haettu palvelimelta.`;
+    } else {
+        STATUSBAR.textContent = `${aikaleima}: ❌ Yhteytä palvelimelle ei voida tällä hetkellä muodostaa.`;
+    }
 }
 
-async function getDataFromServer(url) {
+async function yritäHakeaDataa() {
     try {
+        let henkilot = await haeDataaServeriltä("http://localhost:8080/api/henkilot");
+        let suhteet = await haeDataaServeriltä("http://localhost:8080/api/suhteet");
+        console.dir(henkilot);
+        console.dir(suhteet);
 
-        const response = await fetch(url);
+        return true;
+    } catch (error) {
+        console.error("Virhe hakiessa tietoja serveriltä:")
+        console.dir(error);
+        return false;
+    }
+}
+
+async function haeDataaServeriltä(url) {
+    const timeout = 7 * 1000;  // tämän verran odotetaan kutsua maksimissaan
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+
         if (!response.ok) {
             throw new Error(`Virhettä pukkaa, kuten: ${response.status}.`);
         }
 
-        const data = await response.json();
-        return data;
-
+        return response.json();
     } catch (error) {
-        alert(`Virhettä pukkasi hakiessa servulta dataa: '${error}'.`)
+        if (error.name === 'AbortError') {
+            throw new Error("Pyyntö keskeytettiin itse asetetun timeoutin takia.");
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
