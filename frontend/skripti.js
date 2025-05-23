@@ -794,18 +794,22 @@ function määritäLeveydetSolmustaAlavirtaan(juuri) {
 async function teeAsioitaServerinKanssa() {
     let onnistui = await yritäHakeaDataa();
     let aikaleima = new Date().toLocaleTimeString('fi');
+    const virheViesti = `❌ Yhteys palvelimeen on katkennut, yritetään uudelleen`;
+    let pisteitä = "";
 
     if (!onnistui) {
-        STATUSBAR.textContent = `${aikaleima}: ❌ Yhteys palvelimeen on katkennut, yritetään uudelleen`;
+        STATUSBAR.textContent = `${aikaleima}: ${virheViesti}${pisteitä}`;
     }
 
     for (let i = 0; i < 10 && !onnistui; i++) {
+        aikaleima = new Date().toLocaleTimeString('fi');
         onnistui = await yritäHakeaDataa();
 
         if (onnistui) {
             break;
         } else {
-            STATUSBAR.textContent += ".";
+            pisteitä += ".";
+            STATUSBAR.textContent = `${aikaleima}: ${virheViesti}${pisteitä}`;
         }
 
         const sleep = ms => new Promise(r => setTimeout(r, ms));
