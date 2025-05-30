@@ -8,8 +8,13 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>cykupuun testisivu</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Tämän voi vaihtaa minifoiduksi versioksi, kun suorituskyvyllä alkaa olla väliä! -->
-    <script src="./cytoscape.umd.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Tämän voi vaihtaa minifoiduksi versioksi, kun suorituskyvyllä alkaa olla väliä! Nykyinen versio '3.32.0' -->
+    <!-- <script type="module" src="./src/js/cytoscape/cytoscape.umd.js"></script> -->
+    <!-- <script type="module" src="./src/js/cykupuu.js"></script>
+    <script type="module" src="./src/js/util.js"></script>
+    <script type="module" src="./src/js/model/henkilo.js"></script>
+    <script type="module" src="./src/js/model/suhde.js"></script> -->
 </head>
 
 <body>
@@ -27,10 +32,10 @@
         <p id="statusbar">Valitse solmu näyttääksesi tietoja.</p>
     </div>
     <footer>
-        <div id="versio">Versio: 0.0.5</div>
+        <div id="versio">Versio: 0.1.0</div>
     </footer>
     <!-- page content -->
-    <script src="./skripti.js"></script>
+    <script type="module" src="./src/js/main.js"></script>
 </body>
 
 </html>

@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = { "http://localhost", "null" })  // toistaiseksi päälle, helpottaa kehittämistä!
+@CrossOrigin(origins = { "http://localhost:5500" })  // toistaiseksi päälle, helpottaa kehittämistä!
 public class HenkiloSuhteetController {
 
     private static final Logger log = LoggerFactory.getLogger(HenkiloSuhteetController.class);
