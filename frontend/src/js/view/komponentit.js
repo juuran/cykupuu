@@ -28,7 +28,7 @@ function htmlToNode(html) {
 }
 
 class ElementAry {
-    _underlyingElement;
+    underlyingElement;
     #listenerFunction;
     #listenerKeyword;
     #containingElement;
@@ -38,31 +38,31 @@ class ElementAry {
             throw Error("All of the fields must contain relevant values in ElementAry constructor.");
         }
 
-        this._underlyingElement = null;
+        this.underlyingElement = null;
         this.#listenerFunction = listener;
         this.#listenerKeyword = listenerKeyword;
         this.#containingElement = containingElement;
     }
 
     _attach(html) {
-        this._underlyingElement = htmlToNode(html);
-        this.#containingElement.appendChild(this._underlyingElement);
-        this._underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
+        this.underlyingElement = htmlToNode(html);
+        this.#containingElement.appendChild(this.underlyingElement);
+        this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
     }
 
     _detach() {
-        this._underlyingElement.removeEventListener(this.#listenerKeyword, this.#listenerFunction);
-        this.#containingElement.removeChild(this._underlyingElement);
-        this._underlyingElement.remove();
+        this.underlyingElement.removeEventListener(this.#listenerKeyword, this.#listenerFunction);
+        this.#containingElement.removeChild(this.underlyingElement);
+        this.underlyingElement.remove();
 
         // tyhjätään muut paitsi containing element, koska tähän kytkeydytään taas _attachissa
-        this._underlyingElement = null;
+        this.underlyingElement = null;
         this.#listenerFunction = null;
         this.#listenerKeyword = null;
     }
 
-    _isUp() {
-        if (this._underlyingElement) {
+    isUp() {
+        if (this.underlyingElement) {
             return true;
         }
         return false;
@@ -71,19 +71,19 @@ class ElementAry {
 
 class inputHakuKentta extends ElementAry {
     up() {
-        if (this._isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
-            this._underlyingElement.focus();
+        if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
+            this.underlyingElement.focus();
             return;
         }
 
         // muussa tapauksessa luodaan
         this._attach('<input id="hakukentta" placeholder="Hae henkilöä nimeltä"/>');
-        this._underlyingElement.focus();
+        this.underlyingElement.focus();
         kytkeNappaimenKuuntelija(false);  // muut näppäinkuuntelijat pois
     }
 
     down() {
-        if (this._isUp()) {
+        if (this.isUp()) {
             this._detach();
             kytkeNappaimenKuuntelija(true);  // muut näppäinkuuntelijat takaisin
         }

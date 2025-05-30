@@ -1,6 +1,6 @@
 import cytoscape from './cytoscape/cytoscape.umd.js';
 import * as Util from './util.js';
-import { inputHakuKentta } from './view/komponentit.js'
+import { inputHakuKentta } from './view/komponentit.js';
 import { Suhde, luoSuhdeSolmutJaKaaret } from './model/suhde.js';
 import { Henkilo, haeHenkilonRyhma, luoHenkiloSolmut } from './model/henkilo.js';
 import { kytkeNappaimenKuuntelija } from './main.js';
@@ -73,7 +73,7 @@ class Cykupuu {
 
     poistaSolmu() {
         const nodet = cy.nodes(":selected");
-        PREVIOUSLY_REMOVED.push(cy.remove(nodet));  // (käyttää jquery-mäisiä selectoreita, muttei jqueryä - riippuvuukseton)
+        this.#previouslyRemoved.push(cy.remove(nodet));  // (käyttää jquery-mäisiä selectoreita, muttei jqueryä - riippuvuukseton)
     }
 
     valitseLehdet() {
@@ -118,7 +118,7 @@ class Cykupuu {
 
     poistaKaari() {
         let edget = cy.edges(":selected");
-        PREVIOUSLY_REMOVED.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        this.#previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
     }
 
     undoPoisto() {
@@ -134,7 +134,7 @@ class Cykupuu {
             aikaleima = new Date().toLocaleTimeString('fi');
         }
 
-        this.#statusbar.textContent = `${aikaleima}: ${teksti}`
+        this.#statusbar.textContent = `${aikaleima}: ${teksti}`;
     }
 
     nostaHakuKentta() {
@@ -152,8 +152,8 @@ class Cykupuu {
         return null;
     }
 
-    hakuKentanHakulogiikka() {
-        const hakuehto = this.#hakuKentta.domElement.value.toLocaleLowerCase().trim();
+    hakuKentanHakulogiikka(event) {
+        const hakuehto = event.currentTarget.value.toLocaleLowerCase().trim();
         if (hakuehto.length < 3) {
             return;
         }
@@ -193,19 +193,19 @@ class Cykupuu {
     */
 
     lisaaDataGraafiin() {
-        graafinHenkilot = luoHenkiloSolmut(this.#henkiloData, this.#suhdeData, this.#suhteitaPerSyvyys);
-        graafinSuhteet = luoSuhdeSolmutJaKaaret(this.#suhdeData);
+        const graafinHenkilot = luoHenkiloSolmut(this.#henkiloData, this.#suhdeData, this.#suhteitaPerSyvyys);
+        const graafinSuhteet = luoSuhdeSolmutJaKaaret(this.#suhdeData);
         cy.add(graafinHenkilot);
         cy.add(graafinSuhteet);
     }
 
-    jarjestaGraafi() {  // TODO: Korjaa!!!!
+    jarjestaGraafi() {  // TODO: Korjaa!!!!-*
         this.selectRoots();
         juusoSearch(this.#suhteitaPerSyvyys);
-        animoiPolut();
+        // animoiPolut();
 
-        asetaGraafinPositiot(cy.nodes(), this.#suhdeData);
-        cy.animate({ pan: { x: -50, y: -50 }, zoom: 1, duration: 300, easing: "ease-in-out" });
+        // asetaGraafinPositiot(cy.nodes(), this.#suhdeData);
+        // cy.animate({ pan: { x: -50, y: -50 }, zoom: 1, duration: 300, easing: "ease-in-out" });
     }
 
     async haeData(host) {
@@ -251,7 +251,7 @@ class Cykupuu {
 
             return true;
         } catch (error) {
-            console.error("Virhe hakiessa tietoja serveriltä:")
+            console.error("Virhe hakiessa tietoja serveriltä:");
             console.dir(error);
             return false;
         }

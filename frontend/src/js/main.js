@@ -28,26 +28,26 @@ function asetaKuuntelijat() {
     // hakukentän kuuntelijat
     document.addEventListener("keydown", (e) => {
         if (e.code === "Escape") {
-            cykupuu.laskeHakuKentta()
+            cykupuu.laskeHakuKentta();
         }
         if (e.code === "KeyF" && (e.ctrlKey && e.shiftKey || e.ctrlKey && e.altKey || e.shiftKey && e.altKey)) {
             cykupuu.nostaHakuKentta();
         }
     });
-    kytkeNappainKuuntelija(true);
+    kytkeNappaimienKuuntelija(true);
 }
 
-function kytkeNappainKuuntelija(paalle) {
+function kytkeNappaimienKuuntelija(paalle) {
     if (paalle) {
-        document.removeEventListener("keydown", nappainKuuntelija);
-        document.addEventListener("keydown", nappainKuuntelija);
+        document.removeEventListener("keydown", nappaimienKuuntelija);
+        document.addEventListener("keydown", nappaimienKuuntelija);
     }
     else {
-        document.removeEventListener("keydown", nappainKuuntelija);
+        document.removeEventListener("keydown", nappaimienKuuntelija);
     }
 }
 
-function nappainKuuntelija(event) {
+function nappaimienKuuntelija(event) {
     if (event.code === "Delete") {
         cykupuu.poistaSolmu();
     }
@@ -84,7 +84,7 @@ function nappainKuuntelija(event) {
     }
 
     else if (event.code === "KeyH") {
-        cykupuu.asetaGraafinPositiot(cy.elements());
+        cykupuu.jarjestaGraafi();
     }
 }
 
@@ -103,7 +103,7 @@ function nappuloidenKuuntelija(event) {
 
     if (event.currentTarget.id === "hakukenttaButton") {
         const hakukentta = cykupuu.getHakuKentta();
-        if (hakukentta._isUp()) {
+        if (hakukentta.isUp()) {
             cykupuu.laskeHakuKentta();
         } else {
             cykupuu.nostaHakuKentta();
@@ -123,6 +123,6 @@ async function main() {
 
 window.onload = async () => {
     main();
-}
+};
 
-export { kytkeNappainKuuntelija as kytkeNappaimenKuuntelija };
+export { kytkeNappaimienKuuntelija as kytkeNappaimenKuuntelija };

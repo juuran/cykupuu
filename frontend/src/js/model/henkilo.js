@@ -1,11 +1,13 @@
 class Henkilo {
 
-    constructor(henkiloId, etunimet, sukunimet, vanhempiSuhteet, pariSuhteet, syvyys) {
+    constructor(henkiloId, etunimet, sukunimet, vanhempiSuhdeLiitokset, pariSuhdeLiitokset, syvyys) {
         this.id = henkiloId;
         this.etunimet = etunimet;
         this.sukunimet = sukunimet;
-        this.vanhempiSuhteet = vanhempiSuhteet;
-        this.pariSuhteet = pariSuhteet;
+        this.vanhempiSuhteet = vanhempiSuhdeLiitokset;
+        this.pariSuhteet = pariSuhdeLiitokset;
+
+        // tästä alas henkilön metatietoja (piirtämiseen jne)
         this.syvyys = syvyys;
     }
 
@@ -20,14 +22,11 @@ function luoHenkiloSolmut(henkilot, suhteet, suhteitaPerSyvyys) {
 
     // luo solmut henkilöille
     for (const henkilo of Object.values(henkilot)) {
-        let ryhmani = haeHenkilonRyhma(henkilo, suhteet, suhteitaPerSyvyys);
-        if (!ryhmani) { ryhmani = 1; } // TODO: POISTA TÄMÄ PASKA!!!!!!!!!!!!!!
 
         henks.push({
             group: 'nodes',
             data: {
                 id: henkilo.id,
-                weight: ryhmani,
                 label: `${henkilo.etunimet}\n${henkilo.sukunimet}`  // tämä sallii monirivisen tekstin
             },
             classes: 'multiline-manual',
@@ -38,6 +37,7 @@ function luoHenkiloSolmut(henkilot, suhteet, suhteitaPerSyvyys) {
                 }
             }
         });
+
     }
 
     return henks;

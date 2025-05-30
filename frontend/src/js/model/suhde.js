@@ -1,12 +1,14 @@
 class Suhde {
 
-    constructor(suhdeId, suhdetyyppi, onkoYhdessa, onkoNaimisissa, vanhempienSuhdeLiitokset, lastenSuhdeLiitokset, ryhma) {
+    constructor(suhdeId, suhdeTyyppi, onkoYhdessa, onkoNaimisissa, vanhempienSuhdeLiitokset, lastenSuhdeLiitokset) {
         this.id = suhdeId;
-        this.suhdetyyppi = suhdetyyppi;
+        this.suhdetyyppi.nimike = suhdeTyyppi;
         this.onkoYhdessa = onkoYhdessa;
         this.onkoNaimisissa = onkoNaimisissa;
         this.ylavirtaLiitokset = vanhempienSuhdeLiitokset;
         this.alavirtaLiitokset = lastenSuhdeLiitokset;
+
+        // tästä alas suhteen metatietoja (piirtämiseen jne)
         this.ryhma = ryhma;
     }
 
@@ -32,19 +34,18 @@ function luoSuhdeSolmutJaKaaret(suhteet) {
 
     for (const suhde of Object.values(suhteet)) {
         // luo **solmut** suhteille
-        let tempSuhdeId = suhde.suhdeTyyppi.nimike + " (" + suhde.id + ")";
-        const ryhmani = suhde.ryhma ? suhde.ryhma : 1;  // TODO: Poista tämä väliaikainen tukirakenne!!!
+        const id = suhde.id;
 
         suhts.push({
             group: 'nodes',
             data: {
-                id: tempSuhdeId,
-                weight: ryhmani
+                id: id,
+                label: `${suhde.suhdeTyyppi.nimike} (${id})`
             },
             scratch: {
                 _itse: {
                     suhde: suhde,
-                    toString: () => suhde.toString() + `(r=${ryhmani})`,
+                    toString: () => suhde.toString() + (suhde.ryhma ? `(r=${suhde.ryhma})` : "")
                 }
             }
         });
@@ -55,9 +56,9 @@ function luoSuhdeSolmutJaKaaret(suhteet) {
             suhts.push({
                 group: 'edges',
                 data: {
-                    id: vanhempiId + tempSuhdeId,  // (kenttä ei näy missään
+                    id: `${vanhempiId}_${id}`,  // (kenttä ei näy missään
                     source: vanhempiId,
-                    target: tempSuhdeId
+                    target: id
                 },
                 classes: 'round-taxi'
             });
@@ -69,8 +70,8 @@ function luoSuhdeSolmutJaKaaret(suhteet) {
             suhts.push({
                 group: 'edges',
                 data: {
-                    id: tempSuhdeId + lapsiId,  // (kenttä ei näy missään)
-                    source: tempSuhdeId,
+                    id: `${id}_${lapsiId}`,  // (kenttä ei näy missään)
+                    source: id,
                     target: lapsiId
                 },
                 classes: 'round-taxi'
