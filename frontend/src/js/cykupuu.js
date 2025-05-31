@@ -43,7 +43,7 @@ class Cykupuu {
         this.#statusbar = document.getElementById("statusbar");
         this.#henkiloData = {};
         this.#suhdeData = {};
-        this.#hakuKentta = new inputHakuKentta(this.hakuKentanHakulogiikka, "keyup", document.getElementById("hakukentanSpan"));
+        this.#hakuKentta = new inputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
         this.#cy = createCytoscape();
         cy = this.#cy;
 
@@ -129,12 +129,12 @@ class Cykupuu {
     }
 
     kirjoitaStatusbar(teksti, onkoAikaleimallinen = false) {
-        let aikaleima;
+        let aikaleima = "";
         if (onkoAikaleimallinen) {
-            aikaleima = new Date().toLocaleTimeString('fi');
+            aikaleima = new Date().toLocaleTimeString('fi') + ": ";
         }
 
-        this.#statusbar.textContent = `${aikaleima}: ${teksti}`;
+        this.#statusbar.textContent = `${aikaleima}${teksti}`;
     }
 
     nostaHakuKentta() {
@@ -218,23 +218,22 @@ class Cykupuu {
         }
 
         for (let i = 0; i < 10 && !onnistui; i++) {
-            aikaleima = new Date().toLocaleTimeString('fi');
-            onnistui = await yritaHakeaDataa();
+            onnistui = await this.yritaHakeaDataa(host);
 
             if (onnistui) {
                 break;
             } else {
                 pisteita += ".";
-                this.kirjoitaStatusbar(`${virheViesti}${pisteita}`);
+                this.kirjoitaStatusbar(`${virheViesti}${pisteita}`, true);
             }
 
             await Util.sleep(1);
         }
 
         if (onnistui) {
-            this.kirjoitaStatusbar(`✔️ Tiedot onnistuneesti haettu palvelimelta.`);
+            this.kirjoitaStatusbar(`✔️ Tiedot onnistuneesti haettu palvelimelta.`, true);
         } else {
-            this.kirjoitaStatusbar(`❌ Yhteytä palvelimelle ei voida tällä hetkellä muodostaa.`);
+            this.kirjoitaStatusbar(`❌ Yhteytä palvelimelle ei voida tällä hetkellä muodostaa.`, true);
         }
     }
 

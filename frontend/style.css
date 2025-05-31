@@ -4,23 +4,32 @@ body {
   font-family: Helvetica, Arial, sans-serif;
 }
 
+h1 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: x-large;
+}
+
 h1,
 #buttonit,
 footer {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: xx-large;
+  margin: 0px;
+  padding: 0px;
   margin-left: 3vw;
+  margin-top: 5px;
 }
 
 .rajaus {
   border-style: dashed;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 2vh;
+  margin-bottom: 0vh;
   margin-right: 3vw;
   margin-left: 3vw;
   display: block;
+  width: 90vw;
+  height: 75vh;
 }
 
+/* pakollinen cytoscapen takia */
 #cy {
   width: 90vw;
   height: 75vh;

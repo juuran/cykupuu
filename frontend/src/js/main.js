@@ -1,5 +1,6 @@
 "use strict";
 import { Cykupuu } from './cykupuu.js';
+import { createLayout } from './cytoscape/boilerplate.js';
 import * as Util from './util.js';
 
 /**
@@ -90,11 +91,11 @@ function nappaimienKuuntelija(event) {
 
 function nappuloidenKuuntelija(event) {
     if (event.currentTarget.id === "randoButton") {
-        cykupuu.luoLeiska("random").run();
+        createLayout("random").run();
     }
 
     if (event.currentTarget.id === "järjestäButton") {
-        cykupuu.luoLeiska("breadthfirst").run();
+        createLayout("breadthfirst").run();
     }
 
     if (event.currentTarget.id === "omaJärjestysButton") {

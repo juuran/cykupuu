@@ -77,7 +77,8 @@ class inputHakuKentta extends ElementAry {
         }
 
         // muussa tapauksessa luodaan
-        this._attach('<input id="hakukentta" placeholder="Hae henkilöä nimeltä"/>');
+        const html = '<input id="hakukentta" placeholder="Hae henkilöä nimeltä" autocomplete=off name=haku />';
+        this._attach(html);
         this.underlyingElement.focus();
         kytkeNappaimenKuuntelija(false);  // muut näppäinkuuntelijat pois
     }

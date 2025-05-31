@@ -1,3 +1,4 @@
+// TODO: Ota selvää miten tälle tehdään automaatti "marshallointi"! Pitää saada toString() toimimaan!
 class Henkilo {
 
     constructor(henkiloId, etunimet, sukunimet, vanhempiSuhdeLiitokset, pariSuhdeLiitokset, syvyys) {
