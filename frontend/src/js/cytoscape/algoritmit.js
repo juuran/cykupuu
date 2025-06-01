@@ -1,5 +1,5 @@
 import { cy } from "../cykupuu.js";
-import * as Util from '../util.js'
+import * as Util from '../util.js';
 
 let unsafeSyvinSyvyys = -1;
 let pathsForVisualizing = [];
@@ -86,7 +86,7 @@ function maaritaLeveydetSolmustaAlavirtaan(juuri, suhteitaPerSyvyys) {
             if (Util.isNumber(todellinenSyvyys)) {
                 syvyys = todellinenSyvyys;
             } else {
-                console.log("Todellista syvyyttä ei voitu löytää!")
+                console.log("Todellista syvyyttä ei voitu löytää!");
             }
 
             let suhdeId = v.scratch()._itse.suhde.id;
@@ -173,11 +173,9 @@ async function animoiPolut() {
 
 
 function juusoSearch(suhteitaPerSyvyys) {
-    // kirjoitaStatusbar('Painettu näppäintä "J" (Juuso): juuso juuso');  // TODO: Poista
     asetaAutoritatiivisetJuuret();
     const valitutJuuret = cy.nodes(":selected");
     if (valitutJuuret.length === 0) {
-        // kirjoitaStatusbar('Painettu näppäintä "J" (Juuso): Tyhjä valinta! Joku solmu tai joukko solmuja vaaditaan.'); // TODO: Poista
         return;
     }
 

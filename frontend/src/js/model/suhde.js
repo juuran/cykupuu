@@ -1,5 +1,14 @@
 class Suhde {
 
+    /**
+     * 
+     * @param {Number} suhdeId 
+     * @param {Object} suhdeTyyppi 
+     * @param {Boolean} onkoYhdessa 
+     * @param {Boolean} onkoNaimisissa 
+     * @param {SuhdeLiitos} vanhempienSuhdeLiitokset 
+     * @param {SuhdeLiitos} lastenSuhdeLiitokset 
+     */
     constructor(suhdeId, suhdeTyyppi, onkoYhdessa, onkoNaimisissa, vanhempienSuhdeLiitokset, lastenSuhdeLiitokset) {
         this.id = suhdeId;
         this.suhdetyyppi.nimike = suhdeTyyppi;

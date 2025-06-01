@@ -61,26 +61,22 @@ function nappaimienKuuntelija(event) {
     }
 
     else if (event.code === "KeyA") {
+        this.kirjoitaStatusbar('Painettu näppäintä "A" (all): valitse kaikki solmut.');
         cykupuu.valitseKaikkiSolmut();
     }
 
     else if (event.code === "KeyR") {
+        this.kirjoitaStatusbar('Painettu näppäintä "R" (roots): valitse juuret.');
         cykupuu.selectRoots();
     }
 
     else if (event.code === "KeyL") {
+        this.kirjoitaStatusbar('Painettu näppäintä "L" (leaves): valitse lehdet.');
         cykupuu.valitseLehdet();
     }
 
-    else if (event.code === "KeyK") {
-        cykupuu.valitseLapset();
-    }
-
-    else if (event.code === "KeyP") {
-        cykupuu.valitseVanhemmat();
-    }
-
     else if (event.code === "KeyJ") {
+        cykupuu.kirjoitaStatusbar('Painettu näppäintä "J" (Juuso): juuso juuso');
         cykupuu.juusoSearch();
     }
 

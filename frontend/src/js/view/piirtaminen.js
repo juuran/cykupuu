@@ -1,4 +1,4 @@
-import { NAYTON_LEVEYS, SIVU_MARGIN, SUHTEEN_MARGIN, NO_OF_GROUPS } from "../cykupuu.js";
+import { Cykupuu as Cyk } from "../cykupuu.js";
 import { haeHenkilonRyhma } from "../model/henkilo.js";
 
 /**
@@ -73,7 +73,7 @@ function asetaGraafinPositiot(solmut, suhdeData) {
             const randomLeveys = Math.floor(Math.random() * 17);
             try {
                 const kerroin = monesko / (monesta + 1);  // monesko == min. 0, monesta == max. x-1 ettei piirretä yli oman alueen
-                henkilonVaakaPiste = (kerroin * (NAYTON_LEVEYS / NO_OF_GROUPS));
+                henkilonVaakaPiste = (kerroin * (Cyk.NAYTON_LEVEYS / Cyk.NO_OF_GROUPS));
                 var ryhmanVaakaPiste = laskeRyhmanVaakaPiste(haeHenkilonRyhma(henkilo));
                 vaakaPiste = ryhmanVaakaPiste + henkilonVaakaPiste + randomLeveys;
             } catch (e) {
@@ -83,7 +83,7 @@ function asetaGraafinPositiot(solmut, suhdeData) {
             // console.dir("solmun jeison ennen: " + JSON.stringify(solmu.json()));
             solmu.json({
                 position: {
-                    x: vaakaPiste + SIVU_MARGIN,
+                    x: vaakaPiste + Cyk.SIVU_MARGIN,
                     y: pystyPiste
                 }
             });
@@ -94,14 +94,14 @@ function asetaGraafinPositiot(solmut, suhdeData) {
             const suhde = solmu.scratch()._itse.suhde;
 
             const vanhempiSuhdeId = suhde.ylavirtaLiitokset[0].id.suhdeId;
-            let pystyPiste = (suhdeData[vanhempiSuhdeId].syvyys * 100) + SUHTEEN_MARGIN;
+            let pystyPiste = (suhdeData[vanhempiSuhdeId].syvyys * 100) + Cyk.SUHTEEN_MARGIN;
             if (!pystyPiste) { pystyPiste = 1; } // TODO: POISTA TÄMÄ PASKA!!!
             let vaakaKeskiPiste = laskeRyhmanKeskimmainenVaakaPiste(suhde.ryhma);
             if (!vaakaKeskiPiste) { vaakaKeskiPiste = 1; } // TODO: POISTA TÄMÄ PASKA!!!
 
             solmu.json({
                 position: {
-                    x: vaakaKeskiPiste + SIVU_MARGIN,
+                    x: vaakaKeskiPiste + Cyk.SIVU_MARGIN,
                     y: pystyPiste
                 }
             });
@@ -111,11 +111,11 @@ function asetaGraafinPositiot(solmut, suhdeData) {
 }
 
 function laskeRyhmanVaakaPiste(ryhma) {
-    return (NAYTON_LEVEYS / NO_OF_GROUPS) * (ryhma - 1);
+    return (Cyk.NAYTON_LEVEYS / Cyk.NO_OF_GROUPS) * (ryhma - 1);
 }
 
 function laskeRyhmanKeskimmainenVaakaPiste(ryhma) {  // TODO: Tee joskus tästä fiksumpi!
-    return laskeRyhmanVaakaPiste(ryhma) + ((NAYTON_LEVEYS / NO_OF_GROUPS) * 0.18);
+    return laskeRyhmanVaakaPiste(ryhma) + ((Cyk.NAYTON_LEVEYS / Cyk.NO_OF_GROUPS) * 0.18);
 }
 
 export { asetaGraafinPositiot };

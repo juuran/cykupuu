@@ -1,12 +1,10 @@
 import cytoscape from './cytoscape/cytoscape.umd.js';
 import * as Util from './util.js';
 import { inputHakuKentta } from './view/komponentit.js';
-import { Suhde, luoSuhdeSolmutJaKaaret } from './model/suhde.js';
-import { Henkilo, haeHenkilonRyhma, luoHenkiloSolmut } from './model/henkilo.js';
-import { kytkeNappaimenKuuntelija } from './main.js';
+import { luoSuhdeSolmutJaKaaret } from './model/suhde.js';
+import { luoHenkiloSolmut } from './model/henkilo.js';
 import { createCytoscape, createLayout } from './cytoscape/boilerplate.js';
-import { maaritaSyvyydetSolmustaAlavirtaan, korjaaSyvyydetYlavirtaan, maaritaLeveydetSolmustaAlavirtaan, asetaAutoritatiivisetJuuret, animoiPolut, juusoSearch } from './cytoscape/algoritmit.js';
-import { asetaGraafinPositiot } from './view/piirtaminen.js';
+import { juusoSearch } from './cytoscape/algoritmit.js';
 
 /**
  * Tämä luokka sisältää business-logiikan kovan ytimen ja muuttuvan tilan.
@@ -16,14 +14,13 @@ import { asetaGraafinPositiot } from './view/piirtaminen.js';
  * Cytoscape instanssi nopeaa saantia varten. Tämä on tyyli, mitä kirjasto itse suosii, siksi näin.
  */
 let cy;
-let NAYTON_LEVEYS;
-let NO_OF_GROUPS;
-let SIVU_MARGIN;
-let SUHTEEN_MARGIN;
 
 class Cykupuu {
 
-    // tämä # on JS:n ruma syntaksi private muuttujille...
+    static NAYTON_LEVEYS;
+    static NO_OF_GROUPS;
+    static SIVU_MARGIN;
+    static SUHTEEN_MARGIN;
 
     #previouslyRemoved;
     #suhteitaPerSyvyys;
@@ -67,7 +64,6 @@ class Cykupuu {
     }
 
     valitseKaikkiSolmut() {
-        this.kirjoitaStatusbar('Painettu näppäintä "A" (all): valitse kaikki solmut.');
         cy.elements().select();
     }
 
@@ -76,49 +72,18 @@ class Cykupuu {
         this.#previouslyRemoved.push(cy.remove(nodet));  // (käyttää jquery-mäisiä selectoreita, muttei jqueryä - riippuvuukseton)
     }
 
+    poistaKaari() {
+        let edget = cy.edges(":selected");
+        this.#previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+    }
+
     valitseLehdet() {
-        this.kirjoitaStatusbar('Painettu näppäintä "L" (leaves): valitse lehdet.');
         cy.nodes().leaves().select();
     }
 
     selectRoots() {
-        let valitut = cy.nodes(":selected");
-        if (valitut.length <= 1) {
-            this.kirjoitaStatusbar('Painettu näppäintä "R" (roots): valitse juuret.');
-            cy.nodes().roots().select();
-            return;
-        }
-
-        this.kirjoitaStatusbar('Painettu näppäintä "R" (roots) kokoelmalle solmuja: valitaan juuret tälle joukolle.');
-        valitut.unselect();
-        valitut.roots().select();
-    }
-
-    valitseLapset() {
-        let valitut = cy.nodes(":selected");
-        if (valitut.length === 0) {
-            this.kirjoitaStatusbar('Painettu näppäintä "K" (kids): Lasten (ja parisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!');
-            return;
-        }
-
-        valitut.outgoers().select();
-        this.kirjoitaStatusbar('Painettu näppäintä "K" (kids): valitaan lapset ja parisuhteet valitulle solmulle.');
-    }
-
-    valitseVanhemmat() {
-        let valitut = cy.nodes(":selected");
-        if (valitut.length === 0) {
-            this.kirjoitaStatusbar('Painettu näppäintä "P" (parents): Vanhempien (ja vanhempisuhteiden) valitseminen on mahdollista vain kun jokin solmu on valittuna!');
-            return;
-        }
-
-        valitut.incomers().select();
-        this.kirjoitaStatusbar('Painettu näppäintä "P" (parents): valitaan vanhemmat ja vanhempisuhteet valitulle solmulle.');
-    }
-
-    poistaKaari() {
-        let edget = cy.edges(":selected");
-        this.#previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        cy.nodes(":selected").unselect();
+        cy.nodes().roots().select();
     }
 
     undoPoisto() {
@@ -199,7 +164,7 @@ class Cykupuu {
         cy.add(graafinSuhteet);
     }
 
-    jarjestaGraafi() {  // TODO: Korjaa!!!!-*
+    jarjestaGraafi() {  // TODO: Korjaa!!!!
         this.selectRoots();
         juusoSearch(this.#suhteitaPerSyvyys);
         // animoiPolut();
@@ -250,12 +215,11 @@ class Cykupuu {
 
             return true;
         } catch (error) {
-            console.error("Virhe hakiessa tietoja serveriltä:");
-            console.dir(error);
+            console.error(error);
             return false;
         }
     }
 
 }
 
-export { Cykupuu, cy, NAYTON_LEVEYS, NO_OF_GROUPS, SIVU_MARGIN, SUHTEEN_MARGIN };
+export { Cykupuu, cy };

@@ -1,6 +1,15 @@
 // TODO: Ota selvää miten tälle tehdään automaatti "marshallointi"! Pitää saada toString() toimimaan!
 class Henkilo {
 
+    /**
+     * 
+     * @param {Number} henkiloId 
+     * @param {String} etunimet 
+     * @param {String} sukunimet 
+     * @param {SuhdeLiitos} vanhempiSuhdeLiitokset 
+     * @param {SuhdeLiitos} pariSuhdeLiitokset 
+     * @param {Number} syvyys 
+     */
     constructor(henkiloId, etunimet, sukunimet, vanhempiSuhdeLiitokset, pariSuhdeLiitokset, syvyys) {
         this.id = henkiloId;
         this.etunimet = etunimet;
@@ -14,6 +23,16 @@ class Henkilo {
 
     toString() {
         return `[ Nimi: ${this.id}. VanhempiSuhteet: (${this.vanhempiSuhteet}). PariSuhteet: (${this.pariSuhteet}). (s=${this.syvyys}) ]`;
+    }
+
+    // tällä parsitaan saatu data suoraan tähän muotoon
+
+    static reviver(key, value) {
+        if (key === "") {  // root arvolla eli itse Object:lla tämä arvo, skipataan
+            return;
+        }
+
+        return Object.assign(); // juuh, jatkellaan tästä!
     }
 
 }
