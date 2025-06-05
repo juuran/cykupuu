@@ -1,5 +1,5 @@
 "use strict";
-import { Cykupuu } from './cykupuu.js';
+import { Cykupuu, cy } from './cykupuu.js';
 import { createLayout } from './cytoscape/boilerplate.js';
 import * as Util from './util.js';
 
@@ -15,6 +15,8 @@ function asetaKuuntelijat() {
     document.getElementById("järjestäButton").addEventListener("click", nappuloidenKuuntelija);
     document.getElementById("omaJärjestysButton").addEventListener("click", nappuloidenKuuntelija);
     document.getElementById("hakukenttaButton").addEventListener("click", nappuloidenKuuntelija);
+    document.getElementById("zoomaaSisaan").addEventListener("click", nappuloidenKuuntelija);
+    document.getElementById("zoomaaUlos").addEventListener("click", nappuloidenKuuntelija);
 
     // hiiren ja kosketuksen kuuntelijat
     document.addEventListener('mouseup', async () => {
@@ -61,17 +63,17 @@ function nappaimienKuuntelija(event) {
     }
 
     else if (event.code === "KeyA") {
-        this.kirjoitaStatusbar('Painettu näppäintä "A" (all): valitse kaikki solmut.');
+        cykupuu.kirjoitaStatusbar('Painettu näppäintä "A" (all): valitse kaikki solmut.');
         cykupuu.valitseKaikkiSolmut();
     }
 
     else if (event.code === "KeyR") {
-        this.kirjoitaStatusbar('Painettu näppäintä "R" (roots): valitse juuret.');
+        cykupuu.kirjoitaStatusbar('Painettu näppäintä "R" (roots): valitse juuret.');
         cykupuu.selectRoots();
     }
 
     else if (event.code === "KeyL") {
-        this.kirjoitaStatusbar('Painettu näppäintä "L" (leaves): valitse lehdet.');
+        cykupuu.kirjoitaStatusbar('Painettu näppäintä "L" (leaves): valitse lehdet.');
         cykupuu.valitseLehdet();
     }
 
@@ -90,21 +92,31 @@ function nappuloidenKuuntelija(event) {
         createLayout("random").run();
     }
 
-    if (event.currentTarget.id === "järjestäButton") {
+    else if (event.currentTarget.id === "järjestäButton") {
         createLayout("breadthfirst").run();
     }
 
-    if (event.currentTarget.id === "omaJärjestysButton") {
+    else if (event.currentTarget.id === "omaJärjestysButton") {
         cykupuu.jarjestaGraafi();
     }
 
-    if (event.currentTarget.id === "hakukenttaButton") {
+    else if (event.currentTarget.id === "hakukenttaButton") {
         const hakukentta = cykupuu.getHakuKentta();
         if (hakukentta.isUp()) {
             cykupuu.laskeHakuKentta();
         } else {
             cykupuu.nostaHakuKentta();
         }
+    }
+
+    // TODO: Korjaa zoomaamaan keskelle
+    else if (event.currentTarget.id === "zoomaaSisaan") {
+        const floatZoomLevel = cy.zoom();
+        cy.zoom(floatZoomLevel * 2);
+    }
+    else if (event.currentTarget.id === "zoomaaUlos") {
+        const floatZoomLevel = cy.zoom();
+        cy.zoom(floatZoomLevel * (1 / 2));
     }
 }
 

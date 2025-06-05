@@ -14,19 +14,25 @@
 <body>
     <h1>cykupuu</h1>
     <div id="buttonit">
-        <button id="randoButton">Umpimähkäistä</button>
-        <button id="järjestäButton">Järjestä</button>
-        <button id="omaJärjestysButton">Oma järjestys</button>
-        <span id="hakukentanSpan"><button id="hakukenttaButton">🔎</button></span>
+        <button class="varjollisetNapit" id="randoButton">Umpimähkäistä</button>
+        <button class="varjollisetNapit" id="järjestäButton">Järjestä</button>
+        <button class="varjollisetNapit" id="omaJärjestysButton">Oma järjestys</button>
+        <span id="hakukentanSpan"><button class="varjollisetNapit" id="hakukenttaButton">🔎</button></span>
+        <span id="graafinMuokkausSpan"></span>
     </div>
     <div class="rajaus">
-        <div id="cy"></div>
+        <div id="cy">
+            <div id="rajauksenNapit">
+                <button class="zoomiNapit" id="zoomaaSisaan">➕</button>
+                <button class="zoomiNapit" id="zoomaaUlos">➖</button>
+            </div>
+        </div>
     </div>
     <div>
         <p id="statusbar">Valitse solmu näyttääksesi tietoja.</p>
     </div>
     <footer>
-        <div id="versio">Versio: 0.1.5</div>
+        <div id="versio">Versio: 0.1.8</div>
     </footer>
     <!-- varsinainen koodi -->
     <script type="module" src="./src/js/main.js"></script>

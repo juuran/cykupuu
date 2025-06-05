@@ -33,6 +33,11 @@ class ElementAry {
     #listenerKeyword;
     #containingElement;
 
+    /**
+     * @param {EventListener} listener 
+     * @param {String} listenerKeyword 
+     * @param {Element} containingElement 
+     */
     constructor(listener, listenerKeyword, containingElement) {
         if (!(listener && listenerKeyword && containingElement)) {
             throw Error("All of the fields must contain relevant values in ElementAry constructor.");
@@ -50,7 +55,7 @@ class ElementAry {
         this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
     }
 
-    _detach() {
+    #detach() {
         this.underlyingElement.removeEventListener(this.#listenerKeyword, this.#listenerFunction);
         this.#containingElement.removeChild(this.underlyingElement);
         this.underlyingElement.remove();
@@ -67,9 +72,23 @@ class ElementAry {
         }
         return false;
     }
+
+    down() {
+        if (this.isUp()) {
+            this.#detach();
+        }
+
+        this.downSupplement();
+    }
+
+    /**
+     * Ylikirjoita minut, jos tarve ylimääräiselle sulkemiselogiikalle.
+     */
+    downSupplement() {
+    }
 }
 
-class inputHakuKentta extends ElementAry {
+class InputHakuKentta extends ElementAry {
     up() {
         if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
             this.underlyingElement.focus();
@@ -83,12 +102,33 @@ class inputHakuKentta extends ElementAry {
         kytkeNappaimenKuuntelija(false);  // muut näppäinkuuntelijat pois
     }
 
-    down() {
-        if (this.isUp()) {
-            this._detach();
-            kytkeNappaimenKuuntelija(true);  // muut näppäinkuuntelijat takaisin
-        }
+    downSupplement() {
+        kytkeNappaimenKuuntelija(true);  // muut näppäinkuuntelijat takaisin
     }
 }
 
-export { inputHakuKentta };
+class ButtonUusiAikuinen extends ElementAry {
+    up(teksti) {
+        if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
+            return;
+        }
+
+        // muussa tapauksessa luodaan
+        const html = `<button id="uusiAikuinen">${teksti}</button>`;
+        this._attach(html);
+    }
+}
+
+class ButtonUusiLapsi extends ElementAry {
+    up(teksti) {
+        if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
+            return;
+        }
+
+        // muussa tapauksessa luodaan
+        const html = `<button id="uusiLapsi">${teksti}</button>`;
+        this._attach(html);
+    }
+}
+
+export { InputHakuKentta, ButtonUusiAikuinen, ButtonUusiLapsi };

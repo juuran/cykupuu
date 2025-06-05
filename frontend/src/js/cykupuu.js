@@ -1,6 +1,6 @@
 import cytoscape from './cytoscape/cytoscape.umd.js';
 import * as Util from './util.js';
-import { inputHakuKentta } from './view/komponentit.js';
+import { InputHakuKentta, ButtonUusiAikuinen, ButtonUusiLapsi } from './view/komponentit.js';
 import { luoSuhdeSolmutJaKaaret } from './model/suhde.js';
 import { luoHenkiloSolmut } from './model/henkilo.js';
 import { createCytoscape, createLayout } from './cytoscape/boilerplate.js';
@@ -17,8 +17,8 @@ let cy;
 
 class Cykupuu {
 
-    static NAYTON_LEVEYS;
-    static NO_OF_GROUPS;
+    static NAYTON_LEVEYS;  // TODO: Poista tämä, lasketaan automaagisesti!
+    static NO_OF_GROUPS;  // TODO: Poista tämä, koska pitäisi laskea automaattisesti!
     static SIVU_MARGIN;
     static SUHTEEN_MARGIN;
 
@@ -28,33 +28,53 @@ class Cykupuu {
     #henkiloData;
     #suhdeData;
     #hakuKentta;
+    #uusiAikuinen;
+    #uusiLapsi;
     #cy;
 
     constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin) {
-        NAYTON_LEVEYS = naytonLeveys;
-        NO_OF_GROUPS = noOfGroups;
-        SIVU_MARGIN = sivuMargin;
-        SUHTEEN_MARGIN = suhteenMargin;
+        this.NAYTON_LEVEYS = naytonLeveys;
+        this.NO_OF_GROUPS = noOfGroups;
+        this.SIVU_MARGIN = sivuMargin;
+        this.SUHTEEN_MARGIN = suhteenMargin;
         this.#previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
         this.#suhteitaPerSyvyys = new Map();
         this.#statusbar = document.getElementById("statusbar");
         this.#henkiloData = {};
         this.#suhdeData = {};
-        this.#hakuKentta = new inputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
+        this.#hakuKentta = new InputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
+        this.#uusiAikuinen = new ButtonUusiAikuinen(this.uudenAikuisenLogiikka, "button", document.getElementById("graafinMuokkausSpan"));
+        this.#uusiLapsi = new ButtonUusiLapsi(this.uudenLapsenLogiikka, "button", document.getElementById("graafinMuokkausSpan"));
         this.#cy = createCytoscape();
         cy = this.#cy;
 
         // asetetaaan layout
         createLayout("preset").run();
+
+        // asetetaan graafin toimintaan liittyvät kuuntelijat
+        cy.nodes().on("tap", this.valitseSolmu());
     }
 
-    valitseSolmu() {
+    valitseSolmu(_event) {
         let valitut = cy.nodes(":selected");
+        this.#uusiAikuinen.down();  // muuta tämä että jos erityyppinen kuin viimeksi,
+        this.#uusiLapsi.down();     // niin sitten vasta luo
+
         if (valitut.length === 1) {
+            const valittu = valitut[0];
+
             // DEBUG LOG valituille, voipi olla että turha
-            console.log(`solmu "${valitut.id()}" valittu: ${valitut.scratch()._itse.toString()}`);
-            const tiedot = valitut[0].scratch()._itse.toString();
+            console.log(`solmu "${valittu.id()}" valittu: ${valittu.scratch()._itse.toString()}`);
+            const tiedot = valittu.scratch()._itse.toString();
             this.kirjoitaStatusbar(tiedot);
+
+            if (valittu.scratch()._itse.suhde) {
+                this.#uusiAikuinen.up("Luo suhteeseen aikuinen");
+                this.#uusiLapsi.up("Luo suhteeseen lapsi");
+            } else {
+                this.#uusiAikuinen.up("Luo uusi vanhempi");
+                this.#uusiLapsi.up("Luo uusi lapsi");
+            }
         }
         else if (valitut.length > 1) {
             this.kirjoitaStatusbar("Valitse vain yksi solmu näyttääksesi tietoja.");
@@ -111,10 +131,7 @@ class Cykupuu {
     }
 
     getHakuKentta() {
-        if (this.#hakuKentta) {
-            return this.#hakuKentta;
-        }
-        return null;
+        return this.#hakuKentta;
     }
 
     hakuKentanHakulogiikka(event) {
@@ -147,6 +164,13 @@ class Cykupuu {
         }
     }
 
+    uudenAikuisenLogiikka(event) {
+
+    }
+
+    uudenLapsenLogiikka(event) {
+
+    }
 
     /*
      

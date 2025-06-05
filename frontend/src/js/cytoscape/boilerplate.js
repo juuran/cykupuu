@@ -58,7 +58,7 @@ function createCytoscape() {
         ],
 
         // options
-        wheelSensitivity: 0.75,
+        wheelSensitivity: 0.5,  // aiemmin 0.75
         minZoom: 0.05,
         maxZoom: 4
     });
@@ -78,7 +78,7 @@ function createLayout(nimi) {
         avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
         nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
         roots: undefined, // the roots of the trees
-        depthSort: function (a, b) { return a.data('weight') - b.data('weight') }, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
+        depthSort: function (a, b) { return a.data('weight') - b.data('weight'); }, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
         animate: true, // whether to transition the node positions
         animationDuration: 500, // duration of animation in ms if enabled
         animationEasing: undefined, // easing of animation if enabled,
