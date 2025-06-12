@@ -1,3 +1,9 @@
+/*
+*       *----------------*
+*       * Tavallinen CSS *
+*       *----------------*
+*/
+
 body {
   margin: 0px;
   padding: 0px;
@@ -6,7 +12,9 @@ body {
 
 h1 {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: x-large;
+  font-size: xx-large;
+  user-select: none;
+  text-align: center;
 }
 
 /* otsikko samalle tasolle graafin kanssa */
@@ -40,8 +48,8 @@ footer {
 #rajauksenNapit {
   position: absolute;
   top: 2%;
-  color: #fff;
-  background-color: #4d90fe;
+  /* color: #fff; */
+  background-color: #749ee6;
   padding: 11px;
 
   border: 1px solid transparent;
@@ -52,13 +60,27 @@ footer {
   outline: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   alignment-baseline: central;
-  width: 5%;
-  right: 2%;
+  width: 55px;
+  height: 85px;
+  top: 9px;
+  right: 15px;
   text-align: center;
   text-decoration: none;
+  border-radius: 9px;
 
   margin: 0px auto;
-  z-index: 1000;
+  z-index: 10;
+}
+
+.zoomiNapit {
+  margin: 2px;
+  padding: 4px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: black;
+  border-radius: 9px;
+  top: 0;
+  right: 0;
 }
 
 .varjollisetNapit,
@@ -67,17 +89,9 @@ footer {
   width: fit-content;
   margin-right: 2vw;
   margin-bottom: 5px;
-  padding: 3px;
-  padding-left: 7px;
-  padding-right: 7px;
   border-width: 2px;
   min-width: 30px;
   max-width: 180px;
-}
-
-.zoomiNapit {
-  top: 0;
-  right: 0;
 }
 
 #graafinMuokkausSpan button {
@@ -89,9 +103,31 @@ footer {
 #statusbar,
 #hakukentta,
 .rajaus,
-#graafinMuokkausSpan button {
+#graafinMuokkausSpan button,
+#tietojenMuokkaus .komponentti {
   box-shadow: 4px 4px 8px lightblue;
   border-radius: 9px;
+}
+
+.varjollisetNapit {
+  padding: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
+}
+
+#tietojenMuokkaus .komponentti {
+  border-style: solid;
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+  margin-right: 2vw;
+  margin-left: 2vw;
+  display: block;
+  position: relative;
+  height: 0;
+}
+
+#tietojenMuokkaus .komponentti.olemassa {
+  height: fit-content;
 }
 
 #statusbar {
@@ -116,38 +152,127 @@ footer {
 }
 
 /*
-*       -----------
-*       Animationit
-*       -----------
+*       *---------------------*
+*       * Muokkausikkunan CSS *
+*       *---------------------*
 */
 
-/* animaatiot */
+/* #tietojenMuokkaus form {
+  position: absolute;
+  top: 2%;
+  background-color: #b374e6;
+  padding: 11px;
 
-#graafinMuokkausSpan button {
-  animation-name: wip;
-  animation-duration: 0.4s;
-  -o-animation-timing-function: ease-in;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  alignment-baseline: central;
+  width: 70vw;
+  height: 70vh;
+  top: 9px;
+  right: 15px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 9px;
+
+  margin: 0px auto;
+  z-index: 10;
+}
+
+#tietojenMuokkaus form .komponentti.olemassa {
+  height: 0;
+  width: 0;
+}
+
+#tietojenMuokkaus form .komponentti.olemassa {
+  margin: 2px;
+  padding: 4px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: black;
+  border-radius: 9px;
+  top: 0;
+  right: 0;
+} */
+
+/*
+*       *-------------------*
+*       * Asettelujärjestys *
+*       *-------------------*
+*/
+
+#randoButton {
+  order: -2;
+}
+
+#järjestäButton {
+  order: -1;
+}
+
+#omaJärjestysButton {
+  order: 0;
+}
+
+#hakukenttaButton {
+  order: 1;
 }
 
 #hakukentta {
-  animation-name: wop;
-  animation-duration: 0.3s;
-  -o-animation-timing-function: ease-in-out;
+  order: 1;
 }
 
-@keyframes wip {
+.joopeli {
+  order: 2;
+}
+
+/*
+*       *-------------*
+*       * Animationit *
+*       *-------------*
+*/
+
+#cy {
+  animation-name: syntyma-laskeutuminen;
+  animation-duration: 1s;
+  animation-timing-function: cubic-bezier(0.44, 0.21, 0, 1); /* ease */
+  animation-delay: 0.2s;
+}
+
+@keyframes syntyma-laskeutuminen {
   from {
-    padding: 0px;
+    height: 25vh;
   }
   to {
   }
 }
 
-@keyframes wop {
-  from {
-    height: 0px;
-  }
-  to {
-    height: 10px;
-  }
+/* komponentti ei oletuksena olemassa, sen padding on 0 */
+.komponentti,
+#hakukentta {
+  /* tila johon päädytään animaation lopuksi: kuollut */
+  padding: 0px;
+
+  /* kuolinanimaatio */
+  transition-property: padding;
+  transition-duration: 0.15s;
+  /* ease-in-out */
+  transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.komponentti.olemassa,
+#hakukentta.olemassa {
+  /* tila johon päädytään animaation lopuksi: olemassa */
+  padding: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
+
+  /* synnyinanimaatio */
+  transition-property: padding;
+  transition-duration: 0.25s;
+  /* ease-out */
+  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 }

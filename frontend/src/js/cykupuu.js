@@ -1,6 +1,5 @@
-import cytoscape from './cytoscape/cytoscape.umd.js';
 import * as Util from './util.js';
-import { InputHakuKentta, ButtonUusiAikuinen, ButtonUusiLapsi } from './view/komponentit.js';
+import { InputHakuKentta, ButtPainike, FormHenkiloa, FormSuhdetta } from './view/komponentit.js';
 import { luoSuhdeSolmutJaKaaret } from './model/suhde.js';
 import { luoHenkiloSolmut } from './model/henkilo.js';
 import { createCytoscape, createLayout } from './cytoscape/boilerplate.js';
@@ -14,6 +13,11 @@ import { juusoSearch } from './cytoscape/algoritmit.js';
  * Cytoscape instanssi nopeaa saantia varten. Tämä on tyyli, mitä kirjasto itse suosii, siksi näin.
  */
 let cy;
+/**
+ * Hieman hack, mutta pakko käyttää että eri moduulissa asetetut kuuntelijat pääsevät
+ * käsiksi ohjelman kontekstiin. Käytetään siis vain komponenttien kuuntelijoissa.
+ */
+var that;
 
 class Cykupuu {
 
@@ -21,30 +25,46 @@ class Cykupuu {
     static NO_OF_GROUPS;  // TODO: Poista tämä, koska pitäisi laskea automaattisesti!
     static SIVU_MARGIN;
     static SUHTEEN_MARGIN;
+    static PIIRTO_STEP;
 
-    #previouslyRemoved;
+    previouslyRemoved;
     #suhteitaPerSyvyys;
     #statusbar;
     #henkiloData;
     #suhdeData;
+    #edellinenValittu;
     #hakuKentta;
     #uusiAikuinen;
     #uusiLapsi;
+    #poistaSolmu;
+    #muokkaaHenkiloa;
+    #muokkaaSuhdetta;
+    #ekaaKertaaPoistan;
     #cy;
 
-    constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin) {
-        this.NAYTON_LEVEYS = naytonLeveys;
-        this.NO_OF_GROUPS = noOfGroups;
-        this.SIVU_MARGIN = sivuMargin;
-        this.SUHTEEN_MARGIN = suhteenMargin;
-        this.#previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
+    constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin, piirtoStep) {
+        that = this;
+
+        Cykupuu.NAYTON_LEVEYS = naytonLeveys;
+        Cykupuu.NO_OF_GROUPS = noOfGroups;
+        Cykupuu.SIVU_MARGIN = sivuMargin;
+        Cykupuu.SUHTEEN_MARGIN = suhteenMargin;
+        Cykupuu.PIIRTO_STEP = piirtoStep;
+        this.previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
         this.#suhteitaPerSyvyys = new Map();
         this.#statusbar = document.getElementById("statusbar");
         this.#henkiloData = {};
         this.#suhdeData = {};
+        this.#edellinenValittu = null;
+
+        const span = document.getElementById("graafinMuokkausSpan");
         this.#hakuKentta = new InputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
-        this.#uusiAikuinen = new ButtonUusiAikuinen(this.uudenAikuisenLogiikka, "button", document.getElementById("graafinMuokkausSpan"));
-        this.#uusiLapsi = new ButtonUusiLapsi(this.uudenLapsenLogiikka, "button", document.getElementById("graafinMuokkausSpan"));
+        this.#poistaSolmu = new ButtPainike(this.poistaSolmut, "click", span);
+        this.#uusiAikuinen = new ButtPainike(this.uudenAikuisenLogiikka, "click", span);
+        this.#uusiLapsi = new ButtPainike(this.uudenLapsenLogiikka, "click", span);
+        this.#muokkaaHenkiloa = new FormHenkiloa(this.muokkaaHenkilonTietoja, "input", document.getElementById("tietojenMuokkaus"));
+        this.#muokkaaSuhdetta = new FormSuhdetta(this.muokkaaSuhteenTietoja, "input", document.getElementById("tietojenMuokkaus"));
+        this.#ekaaKertaaPoistan = true;
         this.#cy = createCytoscape();
         cy = this.#cy;
 
@@ -56,45 +76,77 @@ class Cykupuu {
     }
 
     valitseSolmu(_event) {
-        let valitut = cy.nodes(":selected");
-        this.#uusiAikuinen.down();  // muuta tämä että jos erityyppinen kuin viimeksi,
-        this.#uusiLapsi.down();     // niin sitten vasta luo
+        const valitut = cy.nodes(":selected"); // katsotaan vain solmuja, ei kaaria!
 
         if (valitut.length === 1) {
             const valittu = valitut[0];
+            const edellinen = this.#edellinenValittu;
+            this.#edellinenValittu = valittu;
+
+            if (this.edellinenValittuVastaavanlainen(edellinen, valittu)) {
+                return;
+            }
+
+            this.#uusiAikuinen.down(true);
+            this.#uusiLapsi.down(true);
+            this.#poistaSolmu.down(true);
 
             // DEBUG LOG valituille, voipi olla että turha
             console.log(`solmu "${valittu.id()}" valittu: ${valittu.scratch()._itse.toString()}`);
-            const tiedot = valittu.scratch()._itse.toString();
+            const tiedot = `${valittu.scratch()._itse.toString()} eli moi`;
             this.kirjoitaStatusbar(tiedot);
 
             if (valittu.scratch()._itse.suhde) {
                 this.#uusiAikuinen.up("Luo suhteeseen aikuinen");
                 this.#uusiLapsi.up("Luo suhteeseen lapsi");
+                this.#poistaSolmu.up("🗑️");
+                this.#muokkaaHenkiloa.up();
             } else {
                 this.#uusiAikuinen.up("Luo uusi vanhempi");
                 this.#uusiLapsi.up("Luo uusi lapsi");
+                this.#poistaSolmu.up("🗑️");
+                this.#muokkaaHenkiloa.up();
             }
         }
         else if (valitut.length > 1) {
+            this.#edellinenValittu = null;
+            this.#uusiAikuinen.down();
+            this.#uusiLapsi.down();
+            this.#poistaSolmu.up("🗑️");
+            this.#muokkaaHenkiloa.down();
             this.kirjoitaStatusbar("Valitse vain yksi solmu näyttääksesi tietoja.");
         } else {
+            this.#edellinenValittu = null;
+            this.#uusiAikuinen.down();
+            this.#uusiLapsi.down();
+            this.#poistaSolmu.down();
+            this.#muokkaaHenkiloa.down();
             this.kirjoitaStatusbar("Valitse solmu näyttääksesi tietoja.");
         }
+    }
+
+    edellinenValittuVastaavanlainen(edellinen, nykyinen) {
+        if (!edellinen) {
+            return false;
+        }
+
+        if (edellinen.scratch()._itse.henkilo && nykyinen.scratch()._itse.henkilo) {
+            return true;
+        }
+        if (edellinen.scratch()._itse.suhde && nykyinen.scratch()._itse.suhde) {
+            return true;
+        }
+
+        return false;
     }
 
     valitseKaikkiSolmut() {
         cy.elements().select();
     }
 
-    poistaSolmu() {
-        const nodet = cy.nodes(":selected");
-        this.#previouslyRemoved.push(cy.remove(nodet));  // (käyttää jquery-mäisiä selectoreita, muttei jqueryä - riippuvuukseton)
-    }
-
-    poistaKaari() {
+    poistaKaaret() {
         let edget = cy.edges(":selected");
-        this.#previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
+        this.previouslyRemoved.push(cy.remove(edget));  // bäckspeissillä saa poistaa vain kaaria
     }
 
     valitseLehdet() {
@@ -107,10 +159,10 @@ class Cykupuu {
     }
 
     undoPoisto() {
-        if (this.#previouslyRemoved.length === 0) {
+        if (this.previouslyRemoved.length === 0) {
             return;
         }
-        this.#previouslyRemoved.pop().restore();
+        this.previouslyRemoved.pop().restore();
     }
 
     kirjoitaStatusbar(teksti, onkoAikaleimallinen = false) {
@@ -164,12 +216,51 @@ class Cykupuu {
         }
     }
 
-    uudenAikuisenLogiikka(event) {
+    /*
+     
+     
+     
+    Komponenttikuuntelijat (joiden pakko käyttää 'that':tiä)
+    --------------------------------------------------------
+     
+    */
 
+    poistaSolmut(event) {
+        if (that.#ekaaKertaaPoistan) {
+            alert("Tämä poistaa valitut pallurat, mutta ne voidaan palauttaa undolla (ctrl + Z).");
+            that.#ekaaKertaaPoistan = false;
+        }
+        const nodet = cy.nodes(":selected");
+        that.previouslyRemoved.push(cy.remove(nodet));  // (käyttää jquery-mäisiä selectoreita, muttei jqueryä - riippuvuukseton)
     }
 
-    uudenLapsenLogiikka(event) {
+    uudenAikuisenLogiikka(_event) {
+        // this ei ole näkyvissä ollenkaan luokan ulkopuolelle!
+        alert(`Kaikki aikanaan, myös aikuinen: ${that.#statusbar.textContent}`);
+    }
 
+    uudenLapsenLogiikka(_event) {
+        alert(`Kaikki aikanaan, lapsikin: ${that.#statusbar.textContent}`);
+    }
+
+    muokkaaHenkilonTietoja(event) {
+        const valitut = cy.nodes(":selected"); // katsotaan vain solmuja, ei kaaria!
+        if (valitut.length != 1) {
+            return;
+        }
+
+        const currentTarget = event.currentTarget.value;
+        alert(currentTarget);
+    }
+
+    muokkaaSuhteenTietoja(event) {
+        const valitut = cy.nodes(":selected"); // katsotaan vain solmuja, ei kaaria!
+        if (valitut.length != 1) {
+            return;
+        }
+
+        const currentTarget = event.currentTarget.value;
+        alert(currentTarget);
     }
 
     /*
@@ -177,7 +268,7 @@ class Cykupuu {
      
      
     Funktiot (business-logiikka, "tärkeät funktiot")
-    ----------------------------------------------------
+    ------------------------------------------------
      
     */
 

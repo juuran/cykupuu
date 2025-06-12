@@ -7,7 +7,9 @@ import * as Util from './util.js';
  * Kyseinen "main" tai "fasadi" moduuli hoitaa reitityksen ja delegoinnin. Siis saapuvat kutsut ja lähtevät vastaukset.
 */
 
-const cykupuu = new Cykupuu(1200, 2, 100, 50);
+const zoomausTaso = 2;
+
+const cykupuu = new Cykupuu(1200, 2, 100, 50, 100);
 
 function asetaKuuntelijat() {
     // nappien kuuntelijat
@@ -52,10 +54,10 @@ function kytkeNappaimienKuuntelija(paalle) {
 
 function nappaimienKuuntelija(event) {
     if (event.code === "Delete") {
-        cykupuu.poistaSolmu();
+        cykupuu.poistaSolmut();
     }
     else if (event.code === "Backspace") {
-        cykupuu.poistaKaari();
+        cykupuu.poistaKaaret();
     }
 
     else if (event.code === "KeyZ" && event.ctrlKey) {
@@ -85,6 +87,30 @@ function nappaimienKuuntelija(event) {
     else if (event.code === "KeyH") {
         cykupuu.jarjestaGraafi();
     }
+
+    else if (event.shiftKey && event.code === "ArrowLeft") {
+        cy.panBy({ x: 1.1 * Cykupuu.PIIRTO_STEP, y: 0 });
+    }
+
+    else if (event.shiftKey && event.code === "ArrowRight") {
+        cy.panBy({ x: -1.1 * Cykupuu.PIIRTO_STEP, y: 0 });
+    }
+
+    else if (event.shiftKey && event.code === "ArrowUp") {
+        cy.panBy({ x: 0, y: 1.1 * Cykupuu.PIIRTO_STEP });
+    }
+
+    else if (event.shiftKey && event.code === "ArrowDown") {
+        cy.panBy({ x: 0, y: -1.1 * Cykupuu.PIIRTO_STEP });
+    }
+
+    else if (event.shiftKey && event.code === "NumpadAdd") {
+        zoomaaSisaan();
+    }
+
+    else if (event.shiftKey && event.code === "NumpadSubtract") {
+        zoomaaUlos();
+    }
 }
 
 function nappuloidenKuuntelija(event) {
@@ -111,13 +137,21 @@ function nappuloidenKuuntelija(event) {
 
     // TODO: Korjaa zoomaamaan keskelle
     else if (event.currentTarget.id === "zoomaaSisaan") {
-        const floatZoomLevel = cy.zoom();
-        cy.zoom(floatZoomLevel * 2);
+        zoomaaSisaan();
     }
     else if (event.currentTarget.id === "zoomaaUlos") {
-        const floatZoomLevel = cy.zoom();
-        cy.zoom(floatZoomLevel * (1 / 2));
+        zoomaaUlos();
     }
+}
+
+function zoomaaSisaan() {
+    const floatZoomLevel = cy.zoom();
+    cy.zoom(floatZoomLevel * zoomausTaso);
+}
+
+function zoomaaUlos() {
+    const floatZoomLevel = cy.zoom();
+    cy.zoom(floatZoomLevel * (1 / zoomausTaso));
 }
 
 /**
@@ -134,4 +168,4 @@ window.onload = async () => {
     main();
 };
 
-export { kytkeNappaimienKuuntelija as kytkeNappaimenKuuntelija };
+export { kytkeNappaimienKuuntelija, Cykupuu };

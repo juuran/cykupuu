@@ -16,7 +16,7 @@ function asetaGraafinPositiot(solmut, suhdeData) {
 
             const henkilo = solmu.scratch()._itse.henkilo;
 
-            const pystyPiste = henkilo.syvyys * 100;
+            const pystyPiste = henkilo.syvyys * Cyk.PIIRTO_STEP;
             let vaakaPiste;
             const vanhempiSuhdeLiitos = henkilo.vanhempiSuhteet[0];
             let monesko;  // eli kuinka mones sisaruskatraan lapsista kyseessä
@@ -94,7 +94,7 @@ function asetaGraafinPositiot(solmut, suhdeData) {
             const suhde = solmu.scratch()._itse.suhde;
 
             const vanhempiSuhdeId = suhde.ylavirtaLiitokset[0].id.suhdeId;
-            let pystyPiste = (suhdeData[vanhempiSuhdeId].syvyys * 100) + Cyk.SUHTEEN_MARGIN;
+            let pystyPiste = (suhdeData[vanhempiSuhdeId].syvyys * Cyk.PIIRTO_STEP) + Cyk.SUHTEEN_MARGIN;
             if (!pystyPiste) { pystyPiste = 1; } // TODO: POISTA TÄMÄ PASKA!!!
             let vaakaKeskiPiste = laskeRyhmanKeskimmainenVaakaPiste(suhde.ryhma);
             if (!vaakaKeskiPiste) { vaakaKeskiPiste = 1; } // TODO: POISTA TÄMÄ PASKA!!!

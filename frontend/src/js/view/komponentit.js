@@ -4,8 +4,8 @@
  * https://stackoverflow.com/questions/494143/creating-a-new-dom-element-from-an-html-string-using-built-in-dom-methods-or-pro/35385518#35385518
  */
 
-import { Henkilo } from "../model/henkilo.js";
-import { kytkeNappaimenKuuntelija } from "../main.js";
+import { kytkeNappaimienKuuntelija } from "../main.js";
+import * as Util from "../util.js";
 
 /**
  * @param {String} HTML representing a single node (which might be an Element,
@@ -32,6 +32,7 @@ class ElementAry {
     #listenerFunction;
     #listenerKeyword;
     #containingElement;
+    #isBeingAnimated;
 
     /**
      * @param {EventListener} listener 
@@ -39,31 +40,67 @@ class ElementAry {
      * @param {Element} containingElement 
      */
     constructor(listener, listenerKeyword, containingElement) {
-        if (!(listener && listenerKeyword && containingElement)) {
-            throw Error("All of the fields must contain relevant values in ElementAry constructor.");
+        if (!containingElement) {
+            throw Error("Konstruktorille pitää antaa containingElement mihin kiinnittyä.");
         }
 
-        this.underlyingElement = null;
+        this.underlyingElement = null;  // "nollataan" aluksi ja aina alas mennessä
         this.#listenerFunction = listener;
         this.#listenerKeyword = listenerKeyword;
         this.#containingElement = containingElement;
+        this.#isBeingAnimated = false;
     }
 
     _attach(html) {
+        if (this.#isBeingAnimated) {
+            return;
+        }
+
+        this.#isBeingAnimated = true;
         this.underlyingElement = htmlToNode(html);
         this.#containingElement.appendChild(this.underlyingElement);
-        this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
+        if (this.#listenerFunction) {
+            this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
+        }
+
+        this.underlyingElement.classList.add("komponentti");
+        this.#animateBirth();
+    }
+
+    async #animateBirth() {  // Tehtävä pienellä viiveellä, tai ei alkaisi animoida,
+        await Util.sleep(0.01);  // koska transitio ei ymmärrä olevansa käynnissä.
+        this.underlyingElement.classList.remove("olemassa");  // Varmistetaan,
+        this.underlyingElement.classList.add("olemassa");  // että vain kerran.
+
+        this.underlyingElement.addEventListener("transitionend", e => {
+            this.#isBeingAnimated = false;
+        });
     }
 
     #detach() {
-        this.underlyingElement.removeEventListener(this.#listenerKeyword, this.#listenerFunction);
+        if (this.#isBeingAnimated) {
+            return;
+        }
+
+        this.#isBeingAnimated = true;
+        this.underlyingElement.classList.remove("olemassa");
+
+        this.underlyingElement.addEventListener("transitionend", e => {
+            this.#removeInstantly();
+        }, { once: true });
+    }
+
+    #removeInstantly() {
+        this.#isBeingAnimated = false;
+
+        if (this.#listenerFunction) {
+            this.underlyingElement.removeEventListener(this.#listenerKeyword, this.#listenerFunction);
+        }
         this.#containingElement.removeChild(this.underlyingElement);
         this.underlyingElement.remove();
 
-        // tyhjätään muut paitsi containing element, koska tähän kytkeydytään taas _attachissa
+        // tyhjätään pohjalla oleva DOM olio, koska luodaan aina uusi
         this.underlyingElement = null;
-        this.#listenerFunction = null;
-        this.#listenerKeyword = null;
     }
 
     isUp() {
@@ -73,18 +110,35 @@ class ElementAry {
         return false;
     }
 
-    down() {
-        if (this.isUp()) {
-            this.#detach();
+    /**
+     * Komponentin "ylös nostamisen" logiikka. (Metodissa on kutsuttava "perittyä" _attach metodia järjellisellä html tekstillä.)
+     */
+    up() {
+        throw Error("Määrittele minut!");
+    }
+
+    /**
+     * Komponentin laskemisen logiikka. (Metodia ei kirjoiteta itse, vaan ylimääräinen logiikka sijoitetaan _downSupplement():in alle, joka suoritetaan aina ennen kuin komponentti laitetaan alas.)
+     */
+    down(removeImmediately = false) {
+        if (!this.isUp()) {
+            return;
         }
 
-        this.downSupplement();
+        if (removeImmediately) {
+            this._downSupplement();
+            this.#removeInstantly();
+            return;
+        }
+
+        this._downSupplement();
+        this.#detach();
     }
 
     /**
      * Ylikirjoita minut, jos tarve ylimääräiselle sulkemiselogiikalle.
      */
-    downSupplement() {
+    _downSupplement() {
     }
 }
 
@@ -96,39 +150,96 @@ class InputHakuKentta extends ElementAry {
         }
 
         // muussa tapauksessa luodaan
-        const html = '<input id="hakukentta" placeholder="Hae henkilöä nimeltä" autocomplete=off name=haku />';
+        const html = '<input id="hakukentta" placeholder="Hae henkilöä nimeltä" autocomplete=off name=haku/>';
         this._attach(html);
         this.underlyingElement.focus();
-        kytkeNappaimenKuuntelija(false);  // muut näppäinkuuntelijat pois
+        kytkeNappaimienKuuntelija(false);  // muut näppäinkuuntelijat pois
     }
 
-    downSupplement() {
-        kytkeNappaimenKuuntelija(true);  // muut näppäinkuuntelijat takaisin
+    _downSupplement() {
+        kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat takaisin
     }
 }
 
-class ButtonUusiAikuinen extends ElementAry {
-    up(teksti) {
-        if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
+class ButtPainike extends ElementAry {
+
+    static nro = 1;
+
+    _bringUp(teksti) {
+        if (this.isUp()) {
             return;
         }
 
-        // muussa tapauksessa luodaan
-        const html = `<button id="uusiAikuinen">${teksti}</button>`;
+        const html = `<button id="buttPainike${ButtPainike.nro++}">${teksti}</button>`;
+        this._attach(html);
+    }
+
+    up(teksti) {
+        this._bringUp(teksti);
+    }
+}
+
+class InputKentta extends ElementAry {
+
+    static nro = 1;
+
+    up(nimi, teksti) {
+        const html = `<input name=${nimi} id="kentta${InputKentta.nro++}" placeholder="${teksti}" autocomplete=off/>`;
         this._attach(html);
     }
 }
 
-class ButtonUusiLapsi extends ElementAry {
-    up(teksti) {
-        if (this.isUp()) { // jos jo olemassa, niin oikeasti halutaan vain focus siihen
+class FormHenkiloa extends ElementAry {
+
+    #fieldListener;
+    #fieldListenerKeyword;
+    etunimetKentta;
+    sukuNimetKentta;
+
+    constructor(listener, listenerKeyword, containingElement) {
+        super(null, null, containingElement);  // formi itse ei tarvitse kuuntelijaa, vain sen kentät
+        this.#fieldListener = listener;
+        this.#fieldListenerKeyword = listenerKeyword;
+        this.etunimetKentta = null;
+        this.sukuNimetKentta = null;
+    }
+
+    up() {
+        if (this.isUp()) {
             return;
         }
 
-        // muussa tapauksessa luodaan
-        const html = `<button id="uusiLapsi">${teksti}</button>`;
+        const html =
+            '<form action="">' +
+            '    <div id="divForEtun">' +
+            '        <label id="labelForEtun" for="etun">Etunimet:</label>' +
+            '    </div>' +
+            '    <div id="divForSukun">' +
+            '        <label id="labelForSukun" for="sukun">Sukunimet:</label>' +
+            '    </div>' +
+            '</form>';
         this._attach(html);
+
+        this.etunimetKentta = new InputKentta(this.#fieldListener, this.#fieldListenerKeyword, document.getElementById("divForEtun"));
+        this.sukuNimetKentta = new InputKentta(this.#fieldListener, this.#fieldListenerKeyword, document.getElementById("divForSukun"));
+        this.etunimetKentta.up("etun", "Etunimet");
+        this.sukuNimetKentta.up("sukun", "Sukunimet");
+
+        this.etunimetKentta.underlyingElement.setAttribute("name", "etun");
+        this.sukuNimetKentta.underlyingElement.setAttribute("name", "sukun");
+        kytkeNappaimienKuuntelija(false);  // muut näppäinkuuntelijat pois, koska syötetään nimiä yms
+    }
+
+    _downSupplement() {
+        this.etunimetKentta.down(true);
+        this.sukuNimetKentta.down(true);
+        this.etunimetKentta = null;
+        this.sukuNimetKentta = null;
+        kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
     }
 }
 
-export { InputHakuKentta, ButtonUusiAikuinen, ButtonUusiLapsi };
+class FormSuhdetta extends ElementAry {
+}
+
+export { InputHakuKentta, ButtPainike, FormHenkiloa, FormSuhdetta };
