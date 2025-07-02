@@ -28,4 +28,8 @@ async function haeDataaServerilta(url) {
     }
 }
 
+async function vieDataaServerille(url, data) {
+    // implementoi
+}
+
 export { sleep, isNumber, haeDataaServerilta };

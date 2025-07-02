@@ -24,13 +24,13 @@ footer {
   margin: 0px;
   padding: 0px;
   margin-left: 3vw;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 /* wrapperi graafille */
 .rajaus {
   border-style: dashed;
-  margin-top: 2vh;
+  margin-top: 1vh;
   margin-bottom: 2vh;
   margin-right: 2vw;
   margin-left: 2vw;
@@ -115,21 +115,6 @@ footer {
   padding-right: 7px;
 }
 
-#tietojenMuokkaus .komponentti {
-  border-style: solid;
-  margin-top: 2vh;
-  margin-bottom: 2vh;
-  margin-right: 2vw;
-  margin-left: 2vw;
-  display: block;
-  position: relative;
-  height: 0;
-}
-
-#tietojenMuokkaus .komponentti.olemassa {
-  height: fit-content;
-}
-
 #statusbar {
   font-family: monospace;
   font-size: large;
@@ -143,7 +128,7 @@ footer {
 
 footer {
   font-family: Helvetica, Arial, sans-serif;
-  font-size: smaller;
+  font-size: x-small;
   color: gray;
   position: relative;
   margin-right: 2vw;
@@ -157,47 +142,100 @@ footer {
 *       *---------------------*
 */
 
-/* #tietojenMuokkaus form {
+.ikkunanTausta {
+  z-index: 19;
+
+  background-color: #00000060;
   position: absolute;
-  top: 2%;
-  background-color: #b374e6;
-  padding: 11px;
-
-  border: 1px solid transparent;
-  border-radius: 2px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-
-  outline: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   alignment-baseline: central;
-  width: 70vw;
-  height: 70vh;
-  top: 9px;
-  right: 15px;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 9px;
 
-  margin: 0px auto;
-  z-index: 10;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  right: 0px;
 }
 
-#tietojenMuokkaus form .komponentti.olemassa {
-  height: 0;
-  width: 0;
+.ikkunanTausta.piilossa {
+  z-index: -19;
+
+  background-color: #ffffff00;
 }
 
-#tietojenMuokkaus form .komponentti.olemassa {
-  margin: 2px;
-  padding: 4px;
-  border-style: solid;
-  border-width: 2px;
-  border-color: black;
+.ikkuna.popup {
+  z-index: 20;
+
+  /* transform: scale3d(0%, 0%, 0%); */
+  /* transition-duration: 0.9s; */
+  /* ease-out */
+  /* transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); */
+}
+
+.ikkuna.popup.syntynyt {
+  z-index: 20;
+
+  position: relative;
+  background-color: whitesmoke;
+  height: 500px;
+  width: 500px;
+  left: 30vw;
+  top: 8vh;
+
+  border: 0px transparent;
+  box-shadow: 8px 8px 16px lightgreen;
   border-radius: 9px;
-  top: 0;
-  right: 0;
-} */
+
+  padding: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
+
+  /* synnyinanimaatio */
+  transform: scale3d(80%, 80%, 80%);
+  transition-duration: 0.9s;
+  /* ease-out */
+  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.ikkuna.popup.hyvaksyJaKuole {
+  /* hyväksymis kuolinanimaatio */
+  transform: scale3d(200%, 200%, 200%);
+  transition-duration: 0.9s;
+  /* ease-out */
+  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.ikkuna.popup.kumoaJaKuole {
+  /* kumoamis kuolinanimaatio */
+  transform: scale3d(0%, 0%, 0%);
+  transition-duration: 0.9s;
+  /* ease-in */
+  transition-timing-function: cubic-bezier(0.75, 0, 1, 1);
+  /* ease */
+  /* transition-timing-function: cubic-bezier(0.44, 0.21, 0, 1); */
+}
+
+.forminRivi {
+  display: block;
+  text-align: right;
+  margin: 0px;
+  margin-top: 15px;
+  margin-right: 25vw;
+  width: 100%;
+  user-select: none;
+}
+
+.forminRivi .forminKentta,
+.forminRivi .forminNappi {
+  margin-left: 15px;
+  margin-right: 20px;
+  border-radius: 9px;
+}
+
+.forminKentta,
+.forminNappi {
+  padding: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
+}
 
 /*
 *       *-------------------*
@@ -276,3 +314,16 @@ footer {
   /* ease-out */
   transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
+
+/* talteen nämä, kun koko aika tarvii! */
+/* ease-out */
+/* transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); */
+
+/* ease-in */
+/* transition-timing-function: cubic-bezier(0.75, 0, 1, 1); */
+
+/* ease-in-out */
+/* transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1); */
+
+/* ease */
+/* transition-timing-function: cubic-bezier(0.44, 0.21, 0, 1); */

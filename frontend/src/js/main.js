@@ -4,7 +4,8 @@ import { createLayout } from './cytoscape/boilerplate.js';
 import * as Util from './util.js';
 
 /**
- * Kyseinen "main" tai "fasadi" moduuli hoitaa reitityksen ja delegoinnin. Siis saapuvat kutsut ja lähtevät vastaukset.
+ * Kyseinen "main" tai "fasadi" moduuli hoitaa reitityksen ja delegoinnin. Siis saapuvat kutsut ja
+ * lähtevät vastaukset.
 */
 
 const zoomausTaso = 2;
@@ -33,7 +34,12 @@ function asetaKuuntelijat() {
     // hakukentän kuuntelijat
     document.addEventListener("keydown", (e) => {
         if (e.code === "Escape") {
-            cykupuu.laskeHakuKentta();
+            if (cykupuu.muokkaaHenkiloa.isUp() || cykupuu.muokkaaSuhdetta.isUp()) {
+                cykupuu.muokkaaHenkiloa.down();
+                cykupuu.muokkaaSuhdetta.down();
+            } else if (cykupuu.hakuKentta.isUp()) {
+                cykupuu.laskeHakuKentta();
+            }
         }
         if (e.code === "KeyF" && (e.ctrlKey && e.shiftKey || e.ctrlKey && e.altKey || e.shiftKey && e.altKey)) {
             cykupuu.nostaHakuKentta();
@@ -88,6 +94,10 @@ function nappaimienKuuntelija(event) {
         cykupuu.jarjestaGraafi();
     }
 
+    else if (event.code === "KeyM") {
+        cykupuu.avaaMuokkaus();
+    }
+
     else if (event.shiftKey && event.code === "ArrowLeft") {
         cy.panBy({ x: 1.1 * Cykupuu.PIIRTO_STEP, y: 0 });
     }
@@ -127,8 +137,7 @@ function nappuloidenKuuntelija(event) {
     }
 
     else if (event.currentTarget.id === "hakukenttaButton") {
-        const hakukentta = cykupuu.getHakuKentta();
-        if (hakukentta.isUp()) {
+        if (cykupuu.hakuKentta.isUp()) {
             cykupuu.laskeHakuKentta();
         } else {
             cykupuu.nostaHakuKentta();
@@ -154,12 +163,75 @@ function zoomaaUlos() {
     cy.zoom(floatZoomLevel * (1 / zoomausTaso));
 }
 
+function synkronoiMuutokset() {
+    cykupuu.setDirty(true);
+    ajastaTallennus();
+}
+
+async function ajastaTallennus() {
+    // await Util.sleep(5);
+    // // implementoi
+
+    // const onnitstui = Util.vieDataaServerille();
+    // if (onnistui) {
+    //     cykupuu.kirjoitaStatusbar(`✔️ Tiedot onnistuneesti viety palvelimelle.`, true);
+    //     cykupuu.setDirty(false);
+    // } else {
+    //     const virheViesti = `❌ Yhteys palvelimeen on katkennut, tallentamista yritetään uudelleen pian.`;
+    //     ajastaTallennus();
+    // }
+}
+
+async function haeData(host) {
+    let onnistui = await yritaHakeaDataa(host);
+    const virheViesti = `❌ Yhteys palvelimeen on katkennut, yritetään uudelleen`;
+    let pisteita = ".";
+
+    if (!onnistui) {
+        cykupuu.kirjoitaStatusbar(`${virheViesti}${pisteita}`, true);
+    }
+
+    for (let i = 0; i < 10 && !onnistui; i++) {
+        onnistui = await yritaHakeaDataa(host);
+
+        if (onnistui) {
+            break;
+        } else {
+            pisteita += ".";
+            cykupuu.kirjoitaStatusbar(`${virheViesti}${pisteita}`, true);
+        }
+
+        await Util.sleep(1);
+    }
+
+    if (onnistui) {
+        cykupuu.kirjoitaStatusbar(`✔️ Tiedot onnistuneesti haettu palvelimelta.`, true);
+    } else {
+        cykupuu.kirjoitaStatusbar(`❌ Yhteytä palvelimelle ei voida tällä hetkellä muodostaa.`, true);
+    }
+}
+
+async function yritaHakeaDataa(host) {
+    try {
+        let henkilot = await Util.haeDataaServerilta(`${host}/api/henkilot`);
+        let suhteet = await Util.haeDataaServerilta(`${host}/api/suhteet`);
+
+        cykupuu.setHenkiloData(henkilot);
+        cykupuu.setSuhdeData(suhteet);
+
+        return true;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
 /**
  * Ohjelman suoritus, aka main.
 */
 async function main() {
     asetaKuuntelijat();
-    await cykupuu.haeData("http://localhost:8080");
+    await haeData("http://localhost:8080");
     cykupuu.lisaaDataGraafiin();
     cykupuu.jarjestaGraafi();
 }
@@ -168,4 +240,4 @@ window.onload = async () => {
     main();
 };
 
-export { kytkeNappaimienKuuntelija, Cykupuu };
+export { kytkeNappaimienKuuntelija, Cykupuu, synkronoiMuutokset };

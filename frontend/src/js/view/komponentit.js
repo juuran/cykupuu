@@ -51,8 +51,15 @@ class ElementAry {
         this.#isBeingAnimated = false;
     }
 
-    _attach(html) {
+    _isBeingAnimated() {
         if (this.#isBeingAnimated) {
+            return true;
+        }
+        return false;
+    }
+
+    _attach(html) {
+        if (this._isBeingAnimated()) {
             return;
         }
 
@@ -63,14 +70,14 @@ class ElementAry {
             this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
         }
 
+        this.underlyingElement.classList.remove("olemassa");  // ei saa olla olemassa vielä!
         this.underlyingElement.classList.add("komponentti");
         this.#animateBirth();
     }
 
     async #animateBirth() {  // Tehtävä pienellä viiveellä, tai ei alkaisi animoida,
         await Util.sleep(0.01);  // koska transitio ei ymmärrä olevansa käynnissä.
-        this.underlyingElement.classList.remove("olemassa");  // Varmistetaan,
-        this.underlyingElement.classList.add("olemassa");  // että vain kerran.
+        this.underlyingElement.classList.add("olemassa");
 
         this.underlyingElement.addEventListener("transitionend", e => {
             this.#isBeingAnimated = false;
@@ -78,7 +85,7 @@ class ElementAry {
     }
 
     #detach() {
-        if (this.#isBeingAnimated) {
+        if (this._isBeingAnimated()) {
             return;
         }
 
@@ -91,6 +98,7 @@ class ElementAry {
     }
 
     #removeInstantly() {
+        console.log(`removeInstantly was called for ${this.underlyingElement} contained within ${this.#containingElement}`);
         this.#isBeingAnimated = false;
 
         if (this.#listenerFunction) {
@@ -126,7 +134,7 @@ class ElementAry {
         }
 
         if (removeImmediately) {
-            this._downSupplement();
+            this._downSupplement(true);
             this.#removeInstantly();
             return;
         }
@@ -136,9 +144,10 @@ class ElementAry {
     }
 
     /**
-     * Ylikirjoita minut, jos tarve ylimääräiselle sulkemiselogiikalle.
+     * Ylikirjoita jos, tarvetta ylimääräiselle sulkemislogiikalle.
+     * @param {Boolean} forceRemove voidaan käyttää määrittämään tilanne, että suljetaan joka tapauksessa
      */
-    _downSupplement() {
+    _downSupplement(forceRemove = false) {
     }
 }
 
@@ -165,7 +174,7 @@ class ButtPainike extends ElementAry {
 
     static nro = 1;
 
-    _bringUp(teksti) {
+    up(teksti) {
         if (this.isUp()) {
             return;
         }
@@ -173,73 +182,6 @@ class ButtPainike extends ElementAry {
         const html = `<button id="buttPainike${ButtPainike.nro++}">${teksti}</button>`;
         this._attach(html);
     }
-
-    up(teksti) {
-        this._bringUp(teksti);
-    }
 }
 
-class InputKentta extends ElementAry {
-
-    static nro = 1;
-
-    up(nimi, teksti) {
-        const html = `<input name=${nimi} id="kentta${InputKentta.nro++}" placeholder="${teksti}" autocomplete=off/>`;
-        this._attach(html);
-    }
-}
-
-class FormHenkiloa extends ElementAry {
-
-    #fieldListener;
-    #fieldListenerKeyword;
-    etunimetKentta;
-    sukuNimetKentta;
-
-    constructor(listener, listenerKeyword, containingElement) {
-        super(null, null, containingElement);  // formi itse ei tarvitse kuuntelijaa, vain sen kentät
-        this.#fieldListener = listener;
-        this.#fieldListenerKeyword = listenerKeyword;
-        this.etunimetKentta = null;
-        this.sukuNimetKentta = null;
-    }
-
-    up() {
-        if (this.isUp()) {
-            return;
-        }
-
-        const html =
-            '<form action="">' +
-            '    <div id="divForEtun">' +
-            '        <label id="labelForEtun" for="etun">Etunimet:</label>' +
-            '    </div>' +
-            '    <div id="divForSukun">' +
-            '        <label id="labelForSukun" for="sukun">Sukunimet:</label>' +
-            '    </div>' +
-            '</form>';
-        this._attach(html);
-
-        this.etunimetKentta = new InputKentta(this.#fieldListener, this.#fieldListenerKeyword, document.getElementById("divForEtun"));
-        this.sukuNimetKentta = new InputKentta(this.#fieldListener, this.#fieldListenerKeyword, document.getElementById("divForSukun"));
-        this.etunimetKentta.up("etun", "Etunimet");
-        this.sukuNimetKentta.up("sukun", "Sukunimet");
-
-        this.etunimetKentta.underlyingElement.setAttribute("name", "etun");
-        this.sukuNimetKentta.underlyingElement.setAttribute("name", "sukun");
-        kytkeNappaimienKuuntelija(false);  // muut näppäinkuuntelijat pois, koska syötetään nimiä yms
-    }
-
-    _downSupplement() {
-        this.etunimetKentta.down(true);
-        this.sukuNimetKentta.down(true);
-        this.etunimetKentta = null;
-        this.sukuNimetKentta = null;
-        kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
-    }
-}
-
-class FormSuhdetta extends ElementAry {
-}
-
-export { InputHakuKentta, ButtPainike, FormHenkiloa, FormSuhdetta };
+export { InputHakuKentta, ButtPainike, htmlToNode };

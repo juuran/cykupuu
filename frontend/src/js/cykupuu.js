@@ -1,12 +1,15 @@
 import * as Util from './util.js';
-import { InputHakuKentta, ButtPainike, FormHenkiloa, FormSuhdetta } from './view/komponentit.js';
+import { InputHakuKentta, ButtPainike } from './view/komponentit.js';
+import { FormHenkiloa, FormSuhdetta } from './view/popupit.js';
 import { luoSuhdeSolmutJaKaaret } from './model/suhde.js';
 import { luoHenkiloSolmut } from './model/henkilo.js';
 import { createCytoscape, createLayout } from './cytoscape/boilerplate.js';
 import { juusoSearch } from './cytoscape/algoritmit.js';
+import { synkronoiMuutokset } from './main.js';
 
 /**
- * Tämä luokka sisältää business-logiikan kovan ytimen ja muuttuvan tilan.
+ * Tämä luokka sisältää business-logiikan kovan ytimen ja muuttuvan tilan poislukien ulkoiset
+ * kutsut (jotka hoitaa main).
  */
 
 /**
@@ -32,14 +35,15 @@ class Cykupuu {
     #statusbar;
     #henkiloData;
     #suhdeData;
-    #edellinenValittu;
-    #hakuKentta;
+    hakuKentta;
     #uusiAikuinen;
     #uusiLapsi;
     #poistaSolmu;
-    #muokkaaHenkiloa;
-    #muokkaaSuhdetta;
-    #ekaaKertaaPoistan;
+    #muokkaaNappi;
+    muokkaaHenkiloa;
+    muokkaaSuhdetta;
+    #ekaaKertaaPoistan;  // (jos harmaa niin ei tajua, että kutsutaan that (eikä this) kautta)
+    #dirty;
     #cy;
 
     constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin, piirtoStep) {
@@ -55,16 +59,17 @@ class Cykupuu {
         this.#statusbar = document.getElementById("statusbar");
         this.#henkiloData = {};
         this.#suhdeData = {};
-        this.#edellinenValittu = null;
 
         const span = document.getElementById("graafinMuokkausSpan");
-        this.#hakuKentta = new InputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
+        this.hakuKentta = new InputHakuKentta(this.hakuKentanHakulogiikka, "input", document.getElementById("hakukentanSpan"));
         this.#poistaSolmu = new ButtPainike(this.poistaSolmut, "click", span);
         this.#uusiAikuinen = new ButtPainike(this.uudenAikuisenLogiikka, "click", span);
         this.#uusiLapsi = new ButtPainike(this.uudenLapsenLogiikka, "click", span);
-        this.#muokkaaHenkiloa = new FormHenkiloa(this.muokkaaHenkilonTietoja, "input", document.getElementById("tietojenMuokkaus"));
-        this.#muokkaaSuhdetta = new FormSuhdetta(this.muokkaaSuhteenTietoja, "input", document.getElementById("tietojenMuokkaus"));
+        this.#muokkaaNappi = new ButtPainike(this.avaaMuokkaus, "click", span);
+        this.muokkaaHenkiloa = new FormHenkiloa(this.muokkaaHenkilonTietoja, this.tallennaTaiKumoaMuokkaus, document.getElementById("tietojenMuokkaus"));
+        this.muokkaaSuhdetta = new FormSuhdetta(this.muokkaaSuhteenTietoja, this.tallennaTaiKumoaMuokkaus, document.getElementById("tietojenMuokkaus"));
         this.#ekaaKertaaPoistan = true;
+        this.#dirty = false;
         this.#cy = createCytoscape();
         cy = this.#cy;
 
@@ -80,64 +85,37 @@ class Cykupuu {
 
         if (valitut.length === 1) {
             const valittu = valitut[0];
-            const edellinen = this.#edellinenValittu;
-            this.#edellinenValittu = valittu;
 
-            if (this.edellinenValittuVastaavanlainen(edellinen, valittu)) {
-                return;
-            }
-
-            this.#uusiAikuinen.down(true);
-            this.#uusiLapsi.down(true);
-            this.#poistaSolmu.down(true);
-
-            // DEBUG LOG valituille, voipi olla että turha
-            console.log(`solmu "${valittu.id()}" valittu: ${valittu.scratch()._itse.toString()}`);
-            const tiedot = `${valittu.scratch()._itse.toString()} eli moi`;
+            const itse = valittu.scratch()._itse;
+            const tiedot = `${itse.toString()} eli moi`;
             this.kirjoitaStatusbar(tiedot);
 
-            if (valittu.scratch()._itse.suhde) {
-                this.#uusiAikuinen.up("Luo suhteeseen aikuinen");
-                this.#uusiLapsi.up("Luo suhteeseen lapsi");
+            if (itse.henkilo) {
                 this.#poistaSolmu.up("🗑️");
-                this.#muokkaaHenkiloa.up();
-            } else {
+                this.#muokkaaNappi.up("✏️");
                 this.#uusiAikuinen.up("Luo uusi vanhempi");
                 this.#uusiLapsi.up("Luo uusi lapsi");
+            }
+            else {
                 this.#poistaSolmu.up("🗑️");
-                this.#muokkaaHenkiloa.up();
+                this.#muokkaaNappi.up("✏️");
+                this.#uusiAikuinen.up("Luo uusi vanhempi");
+                this.#uusiLapsi.up("Luo uusi lapsi");
             }
         }
         else if (valitut.length > 1) {
-            this.#edellinenValittu = null;
+            this.#poistaSolmu.up("🗑️");
+            this.#muokkaaNappi.down();
             this.#uusiAikuinen.down();
             this.#uusiLapsi.down();
-            this.#poistaSolmu.up("🗑️");
-            this.#muokkaaHenkiloa.down();
             this.kirjoitaStatusbar("Valitse vain yksi solmu näyttääksesi tietoja.");
         } else {
-            this.#edellinenValittu = null;
+            this.#poistaSolmu.down();
+            this.#muokkaaNappi.down();
             this.#uusiAikuinen.down();
             this.#uusiLapsi.down();
-            this.#poistaSolmu.down();
-            this.#muokkaaHenkiloa.down();
             this.kirjoitaStatusbar("Valitse solmu näyttääksesi tietoja.");
         }
-    }
-
-    edellinenValittuVastaavanlainen(edellinen, nykyinen) {
-        if (!edellinen) {
-            return false;
-        }
-
-        if (edellinen.scratch()._itse.henkilo && nykyinen.scratch()._itse.henkilo) {
-            return true;
-        }
-        if (edellinen.scratch()._itse.suhde && nykyinen.scratch()._itse.suhde) {
-            return true;
-        }
-
-        return false;
     }
 
     valitseKaikkiSolmut() {
@@ -175,15 +153,11 @@ class Cykupuu {
     }
 
     nostaHakuKentta() {
-        this.#hakuKentta.up();
+        this.hakuKentta.up();
     }
 
     laskeHakuKentta() {
-        this.#hakuKentta.down();
-    }
-
-    getHakuKentta() {
-        return this.#hakuKentta;
+        this.hakuKentta.down();
     }
 
     hakuKentanHakulogiikka(event) {
@@ -216,6 +190,22 @@ class Cykupuu {
         }
     }
 
+    getDirty() {
+        return this.#dirty;
+    }
+
+    setDirty(likapostia) {
+        this.#dirty = likapostia;
+    }
+
+    setHenkiloData(henkilot) {
+        this.#henkiloData = henkilot;
+    }
+
+    setSuhdeData(suhteet) {
+        this.#suhdeData = suhteet;
+    }
+
     /*
      
      
@@ -225,7 +215,7 @@ class Cykupuu {
      
     */
 
-    poistaSolmut(event) {
+    poistaSolmut(_event) {
         if (that.#ekaaKertaaPoistan) {
             alert("Tämä poistaa valitut pallurat, mutta ne voidaan palauttaa undolla (ctrl + Z).");
             that.#ekaaKertaaPoistan = false;
@@ -243,14 +233,43 @@ class Cykupuu {
         alert(`Kaikki aikanaan, lapsikin: ${that.#statusbar.textContent}`);
     }
 
+    avaaMuokkaus(_event) {
+        const valitut = cy.nodes(":selected"); // katsotaan vain solmuja, ei kaaria!
+        if (valitut.length !== 1) {
+            return;
+        }
+
+        if (that.muokkaaHenkiloa.isUp() || that.muokkaaSuhdetta.isUp()) {
+            that.muokkaaHenkiloa.down();
+            that.muokkaaSuhdetta.down();
+            return;
+        }
+
+        const valittu = valitut[0];
+        const itse = valittu.scratch()._itse;
+        if (itse.henkilo) {
+            that.muokkaaHenkiloa.up(itse.henkilo);
+            that.muokkaaSuhdetta.down();
+        } else {
+            that.muokkaaSuhdetta.up(itse.suhde);
+            that.muokkaaHenkiloa.down();
+        }
+    }
+
     muokkaaHenkilonTietoja(event) {
         const valitut = cy.nodes(":selected"); // katsotaan vain solmuja, ei kaaria!
         if (valitut.length != 1) {
             return;
         }
 
-        const currentTarget = event.currentTarget.value;
-        alert(currentTarget);
+        const arvo = event.currentTarget.value;
+        const kentta = event.currentTarget.name;
+        if (kentta === "etun") {
+            // mitä tässä nyt voisi edes tehdä...?
+        }
+        else if (kentta === "sukun") {
+            // mitä tässä nyt voisi edes tehdä...?
+        }
     }
 
     muokkaaSuhteenTietoja(event) {
@@ -261,6 +280,54 @@ class Cykupuu {
 
         const currentTarget = event.currentTarget.value;
         alert(currentTarget);
+    }
+
+    tallennaTaiKumoaMuokkaus(event) {
+        event.preventDefault();
+        let hyvaksymisTeksti = "";
+        const kentta = event.currentTarget.name;
+
+        if (kentta === "tallennaHenkilo") {
+            console.log("Tallennetaan muutokset henkilön tietoihin...");
+            that.tallennaMuutokset();
+            synkronoiMuutokset();
+            hyvaksymisTeksti = "hyvaksyttiin";
+            console.log("Tallennettu onnistuneesti.");
+        }
+        else if (kentta === "kumoaHenkilo") {
+            hyvaksymisTeksti = "kumottiin";
+            console.log("Muutoksia henkilön tietoihin ei tallennettu (painettu 'kumoaHenkilo').");
+        }
+
+        // lopuksi suljetaan muokkaus painettiin kumpaa tahansa
+        if (that.muokkaaHenkiloa.isUp() || that.muokkaaSuhdetta.isUp()) {
+            that.muokkaaHenkiloa.down(hyvaksymisTeksti);
+            that.muokkaaSuhdetta.down(hyvaksymisTeksti);
+        }
+    }
+
+    tallennaMuutokset() {
+        const valittu = cy.nodes(":selected");
+        const henkiloForm = that.muokkaaHenkiloa;
+        const suhdeForm = that.muokkaaSuhdetta;
+        if (henkiloForm.isUp()) {
+            const henkilo = valittu.scratch()._itse.henkilo;
+            const etunimi = henkiloForm.etunimetKentta.underlyingElement.value;
+            const sukunimi = henkiloForm.sukuNimetKentta.underlyingElement.value;
+
+            henkilo.etunimet = etunimi;
+            henkilo.sukunimet = sukunimi;
+
+            valittu.json({
+                data: {
+                    label: `${henkilo.etunimet}\n${henkilo.sukunimet}`  // tämä sallii monirivisen tekstin
+                },
+            });
+
+        }
+        else if (suhdeForm.isUp()) {
+            const suhde = valittu.scratch()._itse.suhde;
+        }
     }
 
     /*
@@ -286,53 +353,6 @@ class Cykupuu {
 
         // asetaGraafinPositiot(cy.nodes(), this.#suhdeData);
         // cy.animate({ pan: { x: -50, y: -50 }, zoom: 1, duration: 300, easing: "ease-in-out" });
-    }
-
-    async haeData(host) {
-        let onnistui = await this.yritaHakeaDataa(host);
-        const virheViesti = `❌ Yhteys palvelimeen on katkennut, yritetään uudelleen`;
-        let pisteita = ".";
-
-        if (!onnistui) {
-            this.kirjoitaStatusbar(`${virheViesti}${pisteita}`, true);
-        }
-
-        for (let i = 0; i < 10 && !onnistui; i++) {
-            onnistui = await this.yritaHakeaDataa(host);
-
-            if (onnistui) {
-                break;
-            } else {
-                pisteita += ".";
-                this.kirjoitaStatusbar(`${virheViesti}${pisteita}`, true);
-            }
-
-            await Util.sleep(1);
-        }
-
-        if (onnistui) {
-            this.kirjoitaStatusbar(`✔️ Tiedot onnistuneesti haettu palvelimelta.`, true);
-        } else {
-            this.kirjoitaStatusbar(`❌ Yhteytä palvelimelle ei voida tällä hetkellä muodostaa.`, true);
-        }
-    }
-
-    async yritaHakeaDataa(host) {
-        try {
-            let henkilot = await Util.haeDataaServerilta(`${host}/api/henkilot`);
-            let suhteet = await Util.haeDataaServerilta(`${host}/api/suhteet`);
-
-            console.dir(henkilot);
-            console.dir(suhteet);
-
-            this.#henkiloData = henkilot;
-            this.#suhdeData = suhteet;
-
-            return true;
-        } catch (error) {
-            console.error(error);
-            return false;
-        }
     }
 
 }
