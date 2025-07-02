@@ -291,28 +291,48 @@ footer {
 /* komponentti ei oletuksena olemassa, sen padding on 0 */
 .komponentti,
 #hakukentta {
-  /* tila johon päädytään animaation lopuksi: kuollut */
-  padding: 0px;
+  /* padding: 0; */
 
   /* kuolinanimaatio */
-  transition-property: padding;
-  transition-duration: 0.15s;
+  animation-name: badding-ulos;
+  animation-duration: 1.5s;
   /* ease-in-out */
-  transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
+  animation-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 .komponentti.olemassa,
 #hakukentta.olemassa {
-  /* tila johon päädytään animaation lopuksi: olemassa */
   padding: 3px;
   padding-left: 7px;
   padding-right: 7px;
 
   /* synnyinanimaatio */
-  transition-property: padding;
-  transition-duration: 0.25s;
+  animation-name: badding-sisaan;
+  animation-duration: 1.5s;
   /* ease-out */
-  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+@keyframes badding-sisaan {
+  from {
+    padding: 0;
+  }
+  to {
+    padding: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+}
+
+@keyframes badding-ulos {
+  from {
+    padding: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  to {
+    padding: 0;
+  }
 }
 
 /* talteen nämä, kun koko aika tarvii! */

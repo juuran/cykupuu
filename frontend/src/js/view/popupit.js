@@ -1,5 +1,6 @@
 import { htmlToNode } from "./komponentit.js";
 import { kytkeNappaimienKuuntelija } from "../main.js";
+import { Cykupuu as Cyk } from "../cykupuu.js";
 import * as Util from "../util.js";
 
 /**
@@ -41,6 +42,9 @@ class InputKentta {
     }
 }
 
+/**
+ * Hyvin yksinkertainen ja monistettava nappula formien tms sisään.
+ */
 class InputNappula {
 
     underlyingElement;
@@ -79,7 +83,7 @@ class InputNappula {
 
 class BaseFormi {
     underlyingElement;
-    destroyerCallback;
+    destroyerFunction;  // jätetään undefinediksi ja käytetään, jos määritetty
     #containingElement;
     #isBeingAnimated;
 
@@ -115,18 +119,14 @@ class BaseFormi {
         this.underlyingElement.classList.remove("kumoaJaKuole");    // kierrätetään aina samaa 
         this.underlyingElement.classList.remove("syntynyt");        // elementtiä)
 
-        this.underlyingElement.classList.add("popup");  // ainoa mikä saa olla tässä kohtaa on "popup"
-        this.#animateBirth();
-    }
-
-    async #animateBirth() {  // Tehtävä pienellä viiveellä, tai ei alkaisi animoida,
-        await Util.sleep(0.01);  // koska transitio ei ymmärrä olevansa käynnissä.
         this.#isBeingAnimated = true;
-        this.underlyingElement.classList.add("syntynyt");
+        this.underlyingElement.classList.add("popup");  // ainoa mikä saa olla tässä kohtaa on "popup"
+        this.underlyingElement.classList.add("syntynyt");  // on heti syntynyt
 
-        this.underlyingElement.addEventListener("transitionend", e => {
+        (async () => {
+            await Util.sleep(Cyk.ANIMAATIO_PITUUS_SYNTYMA);
             this.#isBeingAnimated = false;
-        }, { once: true });
+        })();
     }
 
     #detach(hyvaksymisTeksti) {
@@ -135,19 +135,25 @@ class BaseFormi {
         }
 
         this.#isBeingAnimated = true;
-        // this.underlyingElement.classList.remove("syntynyt");
+
         if (hyvaksymisTeksti === "hyvaksyttiin") {
             this.underlyingElement.classList.add("hyvaksyJaKuole");
         } else if (hyvaksymisTeksti === "kumottiin") {
             this.underlyingElement.classList.add("kumoaJaKuole");
         }
 
-        // tuhotaan perivän koodissa määritetty osuus tai sitten ei voida periä ollenkaan...
-        this.underlyingElement.addEventListener("transitionend", this.destroyerFunction, { once: true });
+        this.removeWhenAnimationFinished();
+    }
 
-        this.underlyingElement.addEventListener("transitionend", e => {
-            this.#removeInstantly();
-        }, { once: true });
+    async removeWhenAnimationFinished() {
+        await Util.sleep(Cyk.ANIMAATIO_PITUUS_KUOLEMA);
+
+        // tuhotaan perivän koodissa määritetty osuus tai sitten ei voida periä ollenkaan...
+        if (this.destroyerFunction) {
+            this.destroyerFunction();
+        }
+
+        this.#removeInstantly();
     }
 
     #removeInstantly() {
@@ -274,7 +280,7 @@ class FormHenkiloa extends BaseFormi {
 
         kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
 
-        this.destroyerFunction = e => {
+        this.destroyerFunction = () => {
             document.getElementById("tietojenMuokkaus").classList.add("piilossa");
         };
     }

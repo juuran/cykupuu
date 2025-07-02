@@ -5,6 +5,7 @@
  */
 
 import { kytkeNappaimienKuuntelija } from "../main.js";
+import { Cykupuu as Cyk } from "../cykupuu.js";
 import * as Util from "../util.js";
 
 /**
@@ -70,18 +71,18 @@ class ElementAry {
             this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
         }
 
-        this.underlyingElement.classList.remove("olemassa");  // ei saa olla olemassa vielä!
         this.underlyingElement.classList.add("komponentti");
-        this.#animateBirth();
-    }
+        this.underlyingElement.classList.add("olemassa");  // komponentti on heti olemassa
 
-    async #animateBirth() {  // Tehtävä pienellä viiveellä, tai ei alkaisi animoida,
-        await Util.sleep(0.01);  // koska transitio ei ymmärrä olevansa käynnissä.
-        this.underlyingElement.classList.add("olemassa");
+        console.log("Toimiikos tämä edes?");
 
-        this.underlyingElement.addEventListener("transitionend", e => {
+        // pienen hetkosen päästä voidaan todeta animoinnin päättyneen (anteeksi tämä syntaksi, mutta näin tehtävä jollei määrittele omaa)
+        (async () => {
+            console.log(`${Date.now()}: odotetaan hetki, sitten todetaan animoinnin loppuneen`);
+            await Util.sleep(Cyk.ANIMAATIO_PITUUS_SYNTYMA);
             this.#isBeingAnimated = false;
-        });
+            console.log(`${Date.now()}: animointi on loppunut`);
+        })();
     }
 
     #detach() {
@@ -92,9 +93,11 @@ class ElementAry {
         this.#isBeingAnimated = true;
         this.underlyingElement.classList.remove("olemassa");
 
-        this.underlyingElement.addEventListener("transitionend", e => {
+        // jälleen pienen hetkosen päästä vasta uskalletaan nykäistä irti, että ehtii animoida loppuun
+        (async () => {
+            await Util.sleep(Cyk.ANIMAATIO_PITUUS_KUOLEMA);
             this.#removeInstantly();
-        }, { once: true });
+        })();
     }
 
     #removeInstantly() {

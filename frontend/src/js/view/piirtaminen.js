@@ -6,6 +6,8 @@ import { haeHenkilonRyhma } from "../model/henkilo.js";
  */
 
 
+// TODO: Tätä uhkaa pakkomuutto. Eihän tämä sinällään piirtämiseen liity, graafin asetteluun. Voisi tehdä vaikka oman packagen tms.
+
 function asetaGraafinPositiot(solmut, suhdeData) {
     let suhteenLapsistaPiirretty = new Map();   // montako suhteen lapsista piirretty, esim. ({key: suhde1, value: 3}, {key: suhde2, value: 1})
     let suhteenAikuisistaPiirretty = new Map();  // sama periaate, mutta juurisolmuille (koska heillä ei ole vanhempia, mutta on lapset, muutoin ei olisi heitä ollut tarpeen sukupuuhun lisäilläkään... saati edes mahdollista)

@@ -17,8 +17,8 @@ import { synkronoiMuutokset } from './main.js';
  */
 let cy;
 /**
- * Hieman hack, mutta pakko käyttää että eri moduulissa asetetut kuuntelijat pääsevät
- * käsiksi ohjelman kontekstiin. Käytetään siis vain komponenttien kuuntelijoissa.
+ * Hieman hack (that's JS for ya), mutta pakko käyttää että eri moduulissa asetetut kuuntelijat
+ * pääsevät käsiksi ohjelman kontekstiin. Käytetään siis vain komponenttien kuuntelijoissa.
  */
 var that;
 
@@ -29,6 +29,8 @@ class Cykupuu {
     static SIVU_MARGIN;
     static SUHTEEN_MARGIN;
     static PIIRTO_STEP;
+    static ANIMAATIO_PITUUS_SYNTYMA;
+    static ANIMAATIO_PITUUS_KUOLEMA;
 
     previouslyRemoved;
     #suhteitaPerSyvyys;
@@ -46,7 +48,7 @@ class Cykupuu {
     #dirty;
     #cy;
 
-    constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin, piirtoStep) {
+    constructor(naytonLeveys, noOfGroups, sivuMargin, suhteenMargin, piirtoStep, synnyinAnimaatioPituus, kuolinAnimaatioPituus) {
         that = this;
 
         Cykupuu.NAYTON_LEVEYS = naytonLeveys;
@@ -54,6 +56,8 @@ class Cykupuu {
         Cykupuu.SIVU_MARGIN = sivuMargin;
         Cykupuu.SUHTEEN_MARGIN = suhteenMargin;
         Cykupuu.PIIRTO_STEP = piirtoStep;
+        Cykupuu.ANIMAATIO_PITUUS_SYNTYMA = synnyinAnimaatioPituus;
+        Cykupuu.ANIMAATIO_PITUUS_KUOLEMA = kuolinAnimaatioPituus;
         this.previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
         this.#suhteitaPerSyvyys = new Map();
         this.#statusbar = document.getElementById("statusbar");

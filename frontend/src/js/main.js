@@ -10,7 +10,7 @@ import * as Util from './util.js';
 
 const zoomausTaso = 2;
 
-const cykupuu = new Cykupuu(1200, 2, 100, 50, 100);
+const cykupuu = new Cykupuu(1200, 2, 100, 50, 100, 0.5, 0.5);
 
 function asetaKuuntelijat() {
     // nappien kuuntelijat
