@@ -10,7 +10,7 @@ import * as Util from './util.js';
 
 const zoomausTaso = 2;
 
-const cykupuu = new Cykupuu(1200, 2, 100, 50, 100, 0.5, 0.5);
+const cykupuu = new Cykupuu(1200, 2, 100, 50, 100, 1.5, 1.5);
 
 function asetaKuuntelijat() {
     // nappien kuuntelijat
@@ -35,7 +35,7 @@ function asetaKuuntelijat() {
     document.addEventListener("keydown", (e) => {
         if (e.code === "Escape") {
             if (cykupuu.muokkaaHenkiloa.isUp() || cykupuu.muokkaaSuhdetta.isUp()) {
-                cykupuu.muokkaaHenkiloa.down();
+                cykupuu.muokkaaHenkiloa.down("kumottiin");
                 cykupuu.muokkaaSuhdetta.down();
             } else if (cykupuu.hakuKentta.isUp()) {
                 cykupuu.laskeHakuKentta();
@@ -45,6 +45,7 @@ function asetaKuuntelijat() {
             cykupuu.nostaHakuKentta();
         }
     });
+
     kytkeNappaimienKuuntelija(true);
 }
 

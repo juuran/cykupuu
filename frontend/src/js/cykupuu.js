@@ -56,8 +56,8 @@ class Cykupuu {
         Cykupuu.SIVU_MARGIN = sivuMargin;
         Cykupuu.SUHTEEN_MARGIN = suhteenMargin;
         Cykupuu.PIIRTO_STEP = piirtoStep;
-        Cykupuu.ANIMAATIO_PITUUS_SYNTYMA = synnyinAnimaatioPituus;
-        Cykupuu.ANIMAATIO_PITUUS_KUOLEMA = kuolinAnimaatioPituus;
+        Cykupuu.ANIMAATIO_PITUUS_SYNTYMA = synnyinAnimaatioPituus * 0.9; // varulta nipistetään
+        Cykupuu.ANIMAATIO_PITUUS_KUOLEMA = kuolinAnimaatioPituus * 0.9;  // hiukan ajasta
         this.previouslyRemoved = [];  // säilötään, että voidaan undo'ata!
         this.#suhteitaPerSyvyys = new Map();
         this.#statusbar = document.getElementById("statusbar");

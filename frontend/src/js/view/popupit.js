@@ -112,20 +112,18 @@ class BaseFormi {
             return;
         }
 
+        this.#isBeingAnimated = true;
         this.underlyingElement = htmlToNode(html);
         this.#containingElement.appendChild(this.underlyingElement);  // istutetaan paikalleen
 
-        this.underlyingElement.classList.remove("hyvaksyJaKuole");  // nämä varulta nollataan (koska
-        this.underlyingElement.classList.remove("kumoaJaKuole");    // kierrätetään aina samaa 
-        this.underlyingElement.classList.remove("syntynyt");        // elementtiä)
-
-        this.#isBeingAnimated = true;
         this.underlyingElement.classList.add("popup");  // ainoa mikä saa olla tässä kohtaa on "popup"
         this.underlyingElement.classList.add("syntynyt");  // on heti syntynyt
 
         (async () => {
+            console.log(`${Date.now()}: odotetaan hetki, sitten todetaan animoinnin loppuneen`);
             await Util.sleep(Cyk.ANIMAATIO_PITUUS_SYNTYMA);
             this.#isBeingAnimated = false;
+            console.log(`${Date.now()}: animointi on loppunut`);
         })();
     }
 
@@ -135,25 +133,22 @@ class BaseFormi {
         }
 
         this.#isBeingAnimated = true;
+        this.underlyingElement.classList.remove("syntynyt");
 
         if (hyvaksymisTeksti === "hyvaksyttiin") {
-            this.underlyingElement.classList.add("hyvaksyJaKuole");
+            this.underlyingElement.classList.add("hyvaksy");
         } else if (hyvaksymisTeksti === "kumottiin") {
-            this.underlyingElement.classList.add("kumoaJaKuole");
+            this.underlyingElement.classList.add("kumoa");
         }
 
-        this.removeWhenAnimationFinished();
-    }
-
-    async removeWhenAnimationFinished() {
-        await Util.sleep(Cyk.ANIMAATIO_PITUUS_KUOLEMA);
-
-        // tuhotaan perivän koodissa määritetty osuus tai sitten ei voida periä ollenkaan...
-        if (this.destroyerFunction) {
-            this.destroyerFunction();
-        }
-
-        this.#removeInstantly();
+        (async () => {
+            await Util.sleep(Cyk.ANIMAATIO_PITUUS_KUOLEMA);
+            // tuhotaan perivän koodissa määritetty osuus tai sitten ei voida periä ollenkaan...
+            if (this.destroyerFunction) {
+                this.destroyerFunction();
+            }
+            this.#removeInstantly();
+        })();
     }
 
     #removeInstantly() {
@@ -236,6 +231,7 @@ class FormHenkiloa extends BaseFormi {
             return;
         }
 
+        this.destroyerFunction = null;  // tätä ei tarvita nyt
         document.getElementById("tietojenMuokkaus").classList.remove("piilossa");
 
         const html =
@@ -273,10 +269,9 @@ class FormHenkiloa extends BaseFormi {
         this.tallennaNappi = null;
         this.kumoaNappi = null;
 
-        // TODO: poista, ei pitäisi olla tarpeen
-        // document.getElementById("labelForEtun").remove();
-        // document.getElementById("labelForSukun").remove();
-        // document.getElementById("spanForTallennaKumoa").remove();
+        document.getElementById("labelForEtun").remove();
+        document.getElementById("labelForSukun").remove();
+        document.getElementById("spanForTallennaKumoa").remove();
 
         kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
 

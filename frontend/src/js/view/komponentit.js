@@ -74,9 +74,8 @@ class ElementAry {
         this.underlyingElement.classList.add("komponentti");
         this.underlyingElement.classList.add("olemassa");  // komponentti on heti olemassa
 
-        console.log("Toimiikos tämä edes?");
-
-        // pienen hetkosen päästä voidaan todeta animoinnin päättyneen (anteeksi tämä syntaksi, mutta näin tehtävä jollei määrittele omaa)
+        // pienen hetkosen päästä voidaan todeta animoinnin päättyneen (anteeksi tämä syntaksi,
+        // mutta sulku pakottaa expression eikä declaration ja toinen sulku ajaa heti)
         (async () => {
             console.log(`${Date.now()}: odotetaan hetki, sitten todetaan animoinnin loppuneen`);
             await Util.sleep(Cyk.ANIMAATIO_PITUUS_SYNTYMA);

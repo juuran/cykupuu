@@ -1,7 +1,9 @@
 /*
+*
 *       *----------------*
 *       * Tavallinen CSS *
 *       *----------------*
+*
 */
 
 body {
@@ -144,11 +146,10 @@ footer {
 
 .ikkunanTausta {
   z-index: 19;
-
   background-color: #00000060;
+
   position: absolute;
   alignment-baseline: central;
-
   width: 100%;
   height: 100%;
   top: 0px;
@@ -157,60 +158,25 @@ footer {
 
 .ikkunanTausta.piilossa {
   z-index: -19;
-
   background-color: #ffffff00;
 }
 
 .ikkuna.popup {
   z-index: 20;
 
-  /* transform: scale3d(0%, 0%, 0%); */
-  /* transition-duration: 0.9s; */
-  /* ease-out */
-  /* transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); */
-}
-
-.ikkuna.popup.syntynyt {
-  z-index: 20;
-
   position: relative;
   background-color: whitesmoke;
-  height: 500px;
-  width: 500px;
+  height: 430px;
+  width: 400px;
   left: 30vw;
   top: 8vh;
 
   border: 0px transparent;
   box-shadow: 8px 8px 16px lightgreen;
   border-radius: 9px;
-
   padding: 3px;
   padding-left: 7px;
   padding-right: 7px;
-
-  /* synnyinanimaatio */
-  transform: scale3d(80%, 80%, 80%);
-  transition-duration: 0.9s;
-  /* ease-out */
-  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-}
-
-.ikkuna.popup.hyvaksyJaKuole {
-  /* hyväksymis kuolinanimaatio */
-  transform: scale3d(200%, 200%, 200%);
-  transition-duration: 0.9s;
-  /* ease-out */
-  transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-}
-
-.ikkuna.popup.kumoaJaKuole {
-  /* kumoamis kuolinanimaatio */
-  transform: scale3d(0%, 0%, 0%);
-  transition-duration: 0.9s;
-  /* ease-in */
-  transition-timing-function: cubic-bezier(0.75, 0, 1, 1);
-  /* ease */
-  /* transition-timing-function: cubic-bezier(0.44, 0.21, 0, 1); */
 }
 
 .forminRivi {
@@ -260,17 +226,15 @@ footer {
 }
 
 #hakukentta {
-  order: 1;
-}
-
-.joopeli {
   order: 2;
 }
 
 /*
+*
 *       *-------------*
 *       * Animationit *
 *       *-------------*
+*
 */
 
 #cy {
@@ -335,7 +299,71 @@ footer {
   }
 }
 
-/* talteen nämä, kun koko aika tarvii! */
+.ikkuna.popup.syntynyt {
+  animation-name: popup-syntyma;
+  animation-duration: 1.5s;
+  /* ease-out */
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.ikkuna.popup.hyvaksy {
+  animation-name: popup-hyvaksy;
+  animation-duration: 1.5s;
+  /* ease-in-out */
+  transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.ikkuna.popup.kumoa {
+  animation-name: popup-kumoa;
+  animation-duration: 1.5s;
+  /* ease-in */
+  transition-timing-function: cubic-bezier(0.75, 0, 1, 1);
+}
+
+@keyframes popup-syntyma {
+  from {
+    transform: scale3d(0, 0, 0);
+  }
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes popup-hyvaksy {
+  from {
+    transform: scale3d(1, 1, 1);
+    background-color: whitesmoke;
+    box-shadow: 8px 8px 16px lightgreen;
+  }
+  90% {
+    /* kokonaan läpinäkyväsksi jo ennen loppua */
+    background-color: #ffffff01;
+    box-shadow: 8px 8px 16px #81e98901;
+  }
+  to {
+    transform: scale3d(1.4, 1.4, 1.4);
+    background-color: #ffffff00;
+    box-shadow: 8px 8px 16px #81e98900;
+  }
+}
+
+@keyframes popup-kumoa {
+  from {
+    transform: scale3d(1, 1, 1);
+  }
+  to {
+    transform: scale3d(0, 0, 0);
+  }
+}
+
+/*
+*
+*       *-----------------------------*
+*       * talteen css timing funktiot *
+*       *-----------------------------*
+*
+*/
+
 /* ease-out */
 /* transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); */
 
