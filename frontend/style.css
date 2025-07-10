@@ -241,7 +241,7 @@ footer {
   animation-name: syntyma-laskeutuminen;
   animation-duration: 1s;
   animation-timing-function: cubic-bezier(0.44, 0.21, 0, 1); /* ease */
-  animation-delay: 0.27s;
+  animation-delay: 0.292s;
 }
 
 @keyframes syntyma-laskeutuminen {
@@ -259,7 +259,7 @@ footer {
 
   /* kuolinanimaatio */
   animation-name: badding-ulos;
-  animation-duration: 0.27s;
+  animation-duration: 0.292s;
   /* ease-in-out */
   animation-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
@@ -272,7 +272,7 @@ footer {
 
   /* synnyinanimaatio */
   animation-name: badding-sisaan;
-  animation-duration: 0.33s;
+  animation-duration: 0.333s;
   /* ease-out */
   animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
@@ -301,21 +301,21 @@ footer {
 
 .ikkuna.popup.syntynyt {
   animation-name: popup-syntyma;
-  animation-duration: 0.33s;
+  animation-duration: 0.333s;
   /* ease-out */
   animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .ikkuna.popup.hyvaksy {
   animation-name: popup-hyvaksy;
-  animation-duration: 0.33s;
+  animation-duration: 0.333s;
   /* ease-in-out */
   transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 .ikkuna.popup.kumoa {
   animation-name: popup-kumoa;
-  animation-duration: 0.27s;
+  animation-duration: 0.292s;
   /* ease-in */
   transition-timing-function: cubic-bezier(0.75, 0, 1, 1);
 }
@@ -353,13 +353,13 @@ footer {
     background-color: whitesmoke;
     box-shadow: 8px 8px 16px lightgreen;
   }
-  66% {
+  90% {
     /* lähes kokonaan läpinäkyväsksi jo ennen loppua */
-    background-color: #ffffff00;
-    box-shadow: 8px 8px 16px #81e98900;
+    background-color: #ffffff01;
+    box-shadow: 8px 8px 16px #81e98a01;
   }
   to {
-    transform: scale3d(0, 0, 0);
+    transform: scale3d(0.67, 0.67, 0.67);
     background-color: #ffffff00;
     box-shadow: 8px 8px 16px #81e98900;
   }

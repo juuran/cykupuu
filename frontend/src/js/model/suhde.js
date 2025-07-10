@@ -1,9 +1,16 @@
 class Suhde {
 
+    id;
+    suhdeTyyppi;
+    onkoYhdessa;
+    onkoNaimisissa;
+    ylavirtaLiitokset;
+    alavirtaLiitokset;
+    ryhma;
     /**
      * 
      * @param {Number} suhdeId 
-     * @param {Object} suhdeTyyppi 
+     * @param {SuhdeTyyppi} suhdeTyyppi 
      * @param {Boolean} onkoYhdessa 
      * @param {Boolean} onkoNaimisissa 
      * @param {SuhdeLiitos} vanhempienSuhdeLiitokset 
@@ -11,14 +18,11 @@ class Suhde {
      */
     constructor(suhdeId, suhdeTyyppi, onkoYhdessa, onkoNaimisissa, vanhempienSuhdeLiitokset, lastenSuhdeLiitokset) {
         this.id = suhdeId;
-        this.suhdetyyppi.nimike = suhdeTyyppi;
+        this.suhdeTyyppi = suhdeTyyppi;
         this.onkoYhdessa = onkoYhdessa;
         this.onkoNaimisissa = onkoNaimisissa;
         this.ylavirtaLiitokset = vanhempienSuhdeLiitokset;
         this.alavirtaLiitokset = lastenSuhdeLiitokset;
-
-        // tästä alas suhteen metatietoja (piirtämiseen jne)
-        this.ryhma = ryhma;
     }
 
     toString() {
@@ -36,6 +40,78 @@ class Suhde {
         return `${vanhTeksti} --> ${lapsTeksti}`;
     }
 
+    getNakyvaNimi() {
+        if (this.suhdeTyyppi.nimike === "avioliitto") {
+            return "⛪";
+        } else if (this.suhdeTyyppi.nimike === "avoliitto") {
+            return "🏢";
+        }
+        else {
+            return `${this.suhdeTyyppi.nimike} (${this.id})`;
+        }
+    }
+
+    static reviver(key, value) {  // kaikki nämä tunnistetaan "muotonsa" perusteella eli key:llä ei väliä - se on liian häilyvä
+        // 2.1) id‐pair -> SuhdeLiitos
+        if (
+            value &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'onkoBiologinen' in value &&
+            'selite' in value  // TODO: Muista poistaa tämä, jos poistat selitteen, muuten hajoaa!
+        ) {
+            return new SuhdeLiitos(value.id.henkiloId, value.id.suhdeId, value.onkoBiologinen);
+        }
+
+        // 2.2) suhdeTyyppi -> SuhdeTyyppi
+        if (
+            value &&
+            typeof value === 'object' &&
+            'nimike' in value &&
+            Object.keys(value).length === 1) {  // tämä vain sanoo, ettei muita kenttiä kuin "nimike"
+            return new SuhdeTyyppi(value.nimike);
+        }
+
+        // 2.3) full Suhde object
+        if (
+            value &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'onkoNaimisissa' in value &&
+            'onkoYhdessa' in value &&
+            Array.isArray(value.ylavirtaLiitokset) &&
+            Array.isArray(value.alavirtaLiitokset)
+        ) {
+            return new Suhde(value.id, value.suhdeTyyppi, value.onkoYhdessa, value.onkoNaimisissa, value.ylavirtaLiitokset, value.alavirtaLiitokset);
+        }
+
+        // kaikki muu on primitiivejä tai muuta roskaa (ja sitä on muuten paljon), niihin ei kosketa!
+        return value;
+    }
+
+}
+
+class SuhdeLiitos {
+
+    constructor(henkiloId, suhdeId, onkoBiologinen) {
+        this.id = {};
+        this.id.henkiloId = henkiloId;
+        this.id.suhdeId = suhdeId;
+        this.onkoBiologinen = onkoBiologinen;
+    }
+
+    toString() {
+        return "moro!";
+    }
+
+}
+
+class SuhdeTyyppi {
+
+    constructor(nimike) {
+        this.nimike = nimike;
+    }
+
 }
 
 function luoSuhdeSolmutJaKaaret(suhteet) {
@@ -44,12 +120,13 @@ function luoSuhdeSolmutJaKaaret(suhteet) {
     for (const suhde of Object.values(suhteet)) {
         // luo **solmut** suhteille
         const id = suhde.id;
+        const nakyvaNimi = suhde.getNakyvaNimi();
 
         suhts.push({
             group: 'nodes',
             data: {
                 id: id,
-                label: `${suhde.suhdeTyyppi.nimike} (${id})`
+                label: `${nakyvaNimi}`
             },
             scratch: {
                 _itse: {

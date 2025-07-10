@@ -22,7 +22,7 @@ async function haeDataaServerilta(url) {
             throw new Error(`Virhettä pukkaa, kuten: ${response.status}.`);
         }
 
-        return response.json();
+        return response.text();
     } catch (error) {
         throw error;
     }

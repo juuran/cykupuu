@@ -1,6 +1,12 @@
-// TODO: Ota selvää miten tälle tehdään automaatti "marshallointi"! Pitää saada toString() toimimaan!
-class Henkilo {
+import { getHenkilot, getSuhteet } from "../main.js";
 
+class Henkilo {
+    id;
+    etunimet;
+    sukunimet;
+    vanhempiSuhteet;
+    pariSuhteet;
+    syvyys;
     /**
      * 
      * @param {Number} henkiloId 
@@ -8,31 +14,46 @@ class Henkilo {
      * @param {String} sukunimet 
      * @param {SuhdeLiitos} vanhempiSuhdeLiitokset 
      * @param {SuhdeLiitos} pariSuhdeLiitokset 
-     * @param {Number} syvyys 
      */
-    constructor(henkiloId, etunimet, sukunimet, vanhempiSuhdeLiitokset, pariSuhdeLiitokset, syvyys) {
+    constructor(henkiloId, etunimet, sukunimet, vanhempiSuhdeLiitokset, pariSuhdeLiitokset) {
         this.id = henkiloId;
         this.etunimet = etunimet;
         this.sukunimet = sukunimet;
         this.vanhempiSuhteet = vanhempiSuhdeLiitokset;
         this.pariSuhteet = pariSuhdeLiitokset;
-
-        // tästä alas henkilön metatietoja (piirtämiseen jne)
-        this.syvyys = syvyys;
     }
 
     toString() {
+        // TODO: Tee tämä joskus! Tehtäisiin jotenkin näin, mutta en nyt jaksa ajatella.
+        // if (this.vanhempiSuhteet.length >= 1) {
+        //     const suhteet = getSuhteet();
+        //     const vs = suhteet[this.vanhempiSuhteet.id.suhdeId];
+        // }
+        // if (this.pariSuhteet.length >= 1) {
+        //     const suhteet = getSuhteet();
+        //     let teksti = "";
+        //     for (suhde : this.pariSuhteet) {
+        //         teksti = tesksti + suhteet[suhde.id.suhdeId].toString();
+        //     }
+        // }
         return `[ Nimi: ${this.id}. VanhempiSuhteet: (${this.vanhempiSuhteet}). PariSuhteet: (${this.pariSuhteet}). (s=${this.syvyys}) ]`;
     }
 
     // tällä parsitaan saatu data suoraan tähän muotoon
-
     static reviver(key, value) {
-        if (key === "") {  // root arvolla eli itse Object:lla tämä arvo, skipataan
-            return;
+        if (
+            value &&
+            typeof value === 'object' &&
+            'id' in value &&
+            'etunimet' in value &&
+            'sukunimet' in value &&
+            'vanhempiSuhteet' in value &&
+            'pariSuhteet' in value
+        ) {
+            return new Henkilo(value.id, value.etunimet, value.sukunimet, value.vanhempiSuhteet, value.pariSuhteet);
         }
 
-        return Object.assign(); // juuh, jatkellaan tästä!
+        return value;  // muihin ei halutakaan koskea (primitiivejä yms)
     }
 
 }

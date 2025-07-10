@@ -1,6 +1,8 @@
 "use strict";
 import { Cykupuu, cy } from './cykupuu.js';
 import { createLayout } from './cytoscape/boilerplate.js';
+import { Suhde } from './model/suhde.js';
+import { Henkilo } from './model/henkilo.js';
 import * as Util from './util.js';
 
 /**
@@ -10,7 +12,9 @@ import * as Util from './util.js';
 
 const zoomausTaso = 2;
 
-const cykupuu = new Cykupuu(1200, 2, 100, 50, 100, 0.33, 0.27);
+const cykupuu = new Cykupuu(1200, 2, 100, 50, 100, 0.333, 0.292);
+let suhteet;
+let henkilot;
 
 function asetaKuuntelijat() {
     // nappien kuuntelijat
@@ -214,8 +218,11 @@ async function haeData(host) {
 
 async function yritaHakeaDataa(host) {
     try {
-        let henkilot = await Util.haeDataaServerilta(`${host}/api/henkilot`);
-        let suhteet = await Util.haeDataaServerilta(`${host}/api/suhteet`);
+        const raakaStringSuhteet = await Util.haeDataaServerilta(`${host}/api/suhteet`);
+        const raakaStringHenkilot = await Util.haeDataaServerilta(`${host}/api/henkilot`);
+
+        suhteet = JSON.parse(raakaStringSuhteet, Suhde.reviver);
+        henkilot = JSON.parse(raakaStringHenkilot, Henkilo.reviver);
 
         cykupuu.setHenkiloData(henkilot);
         cykupuu.setSuhdeData(suhteet);
@@ -225,6 +232,14 @@ async function yritaHakeaDataa(host) {
         console.error(error);
         return false;
     }
+}
+
+function getSuhteet() {
+    return suhteet;
+}
+
+function getHenkilot() {
+    return henkilot;
 }
 
 /**
@@ -241,4 +256,4 @@ window.onload = async () => {
     main();
 };
 
-export { kytkeNappaimienKuuntelija, Cykupuu, synkronoiMuutokset };
+export { kytkeNappaimienKuuntelija, Cykupuu, synkronoiMuutokset, getSuhteet, getHenkilot };
