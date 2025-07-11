@@ -91,20 +91,25 @@ class Cykupuu {
             const valittu = valitut[0];
 
             const itse = valittu.scratch()._itse;
-            const tiedot = `${itse.toString()} eli moi`;
-            this.kirjoitaStatusbar(tiedot);
+            const tiedot = `${itse.toString()}`;
 
             if (itse.henkilo) {
                 this.#poistaSolmu.up("🗑️");
                 this.#muokkaaNappi.up("✏️");
                 this.#uusiAikuinen.up("Luo uusi vanhempi");
                 this.#uusiLapsi.up("Luo uusi lapsi");
+                
+                const syvyysTieto = itse.henkilo.syvyys ? `(s=${itse.henkilo.syvyys})` : "";
+                this.kirjoitaStatusbar(tiedot + " " + syvyysTieto);
             }
-            else {
+            else if (itse.suhde) {
                 this.#poistaSolmu.up("🗑️");
                 this.#muokkaaNappi.up("✏️");
                 this.#uusiAikuinen.up("Luo uusi vanhempi");
                 this.#uusiLapsi.up("Luo uusi lapsi");
+                
+                const ryhmaTieto = itse.suhde.ryhma ? `(r=${itse.suhde.ryhma})` : "";
+                this.kirjoitaStatusbar(tiedot + " " + ryhmaTieto);
             }
         }
         else if (valitut.length > 1) {
@@ -269,10 +274,10 @@ class Cykupuu {
         const arvo = event.currentTarget.value;
         const kentta = event.currentTarget.name;
         if (kentta === "etun") {
-            // mitä tässä nyt voisi edes tehdä...?
+            // TODO: Tarviiko tässä tehdä jotain?
         }
         else if (kentta === "sukun") {
-            // mitä tässä nyt voisi edes tehdä...?
+            // ... tai tässä?
         }
     }
 
@@ -282,8 +287,10 @@ class Cykupuu {
             return;
         }
 
-        const currentTarget = event.currentTarget.value;
-        alert(currentTarget);
+        const kentta = event.currentTarget.value;
+        if (kentta === "nimike") {
+            // TODO: Tarviiko tässäkin tehdä jotain?
+        }
     }
 
     tallennaTaiKumoaMuokkaus(event) {
@@ -296,11 +303,22 @@ class Cykupuu {
             that.tallennaMuutokset();
             synkronoiMuutokset();
             hyvaksymisTeksti = "hyvaksyttiin";
-            console.log("Tallennettu onnistuneesti.");
+            console.log("Tallennettu henkilo onnistuneesti.");
         }
         else if (kentta === "kumoaHenkilo") {
             hyvaksymisTeksti = "kumottiin";
             console.log("Muutoksia henkilön tietoihin ei tallennettu (painettu 'kumoaHenkilo').");
+        }
+        else if (kentta === "tallennaSuhde") {
+            console.log("Tallennetaan muutokset suhteeseen...");
+            that.tallennaMuutokset();
+            synkronoiMuutokset();
+            hyvaksymisTeksti = "hyvaksyttiin";
+            console.log("Tallennettu suhde onnistuneesti.");
+        }
+        else if (kentta === "kumoaSuhde") {
+            hyvaksymisTeksti = "kumottiin";
+            console.log("Muutoksia suhteeseen ei tallennettu (painettu 'kumoaSuhde').");
         }
 
         // lopuksi suljetaan muokkaus painettiin kumpaa tahansa
@@ -331,6 +349,15 @@ class Cykupuu {
         }
         else if (suhdeForm.isUp()) {
             const suhde = valittu.scratch()._itse.suhde;
+            const muokattuNimike = suhdeForm.nimikeKentta.underlyingElement.value;
+
+            suhde.suhdeTyyppi.nimike = muokattuNimike;
+
+            valittu.json({
+                data: {
+                    label: `${suhde.getNakyvaNimi()}`
+                },
+            });
         }
     }
 

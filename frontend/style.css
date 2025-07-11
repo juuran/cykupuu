@@ -316,8 +316,8 @@ footer {
 .ikkuna.popup.kumoa {
   animation-name: popup-kumoa;
   animation-duration: 0.292s;
-  /* ease-in */
-  transition-timing-function: cubic-bezier(0.75, 0, 1, 1);
+  /* ease */
+  transition-timing-function: cubic-bezier(0.44, 0.21, 0, 1);
 }
 
 @keyframes popup-syntyma {
@@ -354,9 +354,8 @@ footer {
     box-shadow: 8px 8px 16px lightgreen;
   }
   90% {
-    /* lähes kokonaan läpinäkyväsksi jo ennen loppua */
-    background-color: #ffffff01;
-    box-shadow: 8px 8px 16px #81e98a01;
+    background-color: #ffffff07;
+    box-shadow: 8px 8px 16px #81e98907;
   }
   to {
     transform: scale3d(0.67, 0.67, 0.67);

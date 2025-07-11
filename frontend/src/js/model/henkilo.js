@@ -24,19 +24,21 @@ class Henkilo {
     }
 
     toString() {
-        // TODO: Tee tämä joskus! Tehtäisiin jotenkin näin, mutta en nyt jaksa ajatella.
-        // if (this.vanhempiSuhteet.length >= 1) {
-        //     const suhteet = getSuhteet();
-        //     const vs = suhteet[this.vanhempiSuhteet.id.suhdeId];
-        // }
-        // if (this.pariSuhteet.length >= 1) {
-        //     const suhteet = getSuhteet();
-        //     let teksti = "";
-        //     for (suhde : this.pariSuhteet) {
-        //         teksti = tesksti + suhteet[suhde.id.suhdeId].toString();
-        //     }
-        // }
-        return `[ Nimi: ${this.id}. VanhempiSuhteet: (${this.vanhempiSuhteet}). PariSuhteet: (${this.pariSuhteet}). (s=${this.syvyys}) ]`;
+        const suhteet = getSuhteet();
+        let vsTeksti = "";
+        let psTeksti = "";
+        if (this.vanhempiSuhteet.length >= 1) {
+            // this.vanhempiSuhteet.map(s => suhteet[s.id.suhdeId].toString()).join();
+            for (const suhde of this.vanhempiSuhteet) {
+                vsTeksti += suhteet[suhde.id.suhdeId].toString();
+            }
+        }
+        if (this.pariSuhteet.length >= 1) {
+            for (const suhde of this.pariSuhteet) {
+                psTeksti += suhteet[suhde.id.suhdeId].toString();
+            }
+        }
+        return `Nimi: ${this.id}. VanhempiSuhteet: (${vsTeksti}). PariSuhteet: (${psTeksti}).`;
     }
 
     // tällä parsitaan saatu data suoraan tähän muotoon

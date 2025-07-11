@@ -1,5 +1,5 @@
 import { htmlToNode } from "./komponentit.js";
-import { kytkeNappaimienKuuntelija } from "../main.js";
+import { kytkeNappaimienKuuntelija, kytkeFormiEntterinKuuntelija, kytkeHakukentanKuuntelija } from "../main.js";
 import { Cykupuu as Cyk } from "../cykupuu.js";
 import * as Util from "../util.js";
 
@@ -25,7 +25,7 @@ class InputKentta {
     }
 
     up(name, className, value) {
-        const html = `<input name=${name} id="kentta${InputKentta.nro++}" autocomplete=off class="${className}" value="${value}"/>`;
+        const html = `<input name=${name} id="kentta${InputKentta.nro++}" autocomplete=off class="${className}" value="${value}" type="text"/>`;
         this.underlyingElement = htmlToNode(html);
         this.underlyingElement.addEventListener(this.#listenerKeyword, this.#listenerFunction);
         this.#containingElement.appendChild(this.underlyingElement);
@@ -83,7 +83,14 @@ class InputNappula {
 
 class BaseFormi {
     underlyingElement;
-    destroyerFunction;  // jätetään undefinediksi ja käytetään, jos määritetty
+    /**
+     * Ainoa keino tehdä perityissä luokissa mitään kuolinanimaation jälkeen juuri ennen tuhoamista.
+     */
+    onDestructFunction;
+    /**
+     * Ainoa keino tehdä perityissä luokissa mitään juuri (luomisen ja) luomisanimaation jälkeen.
+     */
+    onConstructFunction;
     #containingElement;
     #isBeingAnimated;
 
@@ -119,11 +126,18 @@ class BaseFormi {
         this.underlyingElement.classList.add("popup");  // ainoa mikä saa olla tässä kohtaa on "popup"
         this.underlyingElement.classList.add("syntynyt");  // on heti syntynyt
 
+        kytkeNappaimienKuuntelija(false);  // muut näppäinkuuntelijat pois, koska syötetään nimiä yms
+        kytkeHakukentanKuuntelija(false);
+        kytkeFormiEntterinKuuntelija(true);
+
         (async () => {
             console.log(`${Date.now()}: odotetaan hetki, sitten todetaan animoinnin loppuneen`);
             await Util.sleep(Cyk.ANIMAATIO_PITUUS_SYNTYMA);
             this.#isBeingAnimated = false;
             console.log(`${Date.now()}: animointi on loppunut`);
+            if (this.onConstructFunction) {
+                this.onConstructFunction();
+            }
         })();
     }
 
@@ -141,11 +155,15 @@ class BaseFormi {
             this.underlyingElement.classList.add("kumoa");
         }
 
+        kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
+        kytkeHakukentanKuuntelija(true);
+        kytkeFormiEntterinKuuntelija(false);
+
         (async () => {
             await Util.sleep(Cyk.ANIMAATIO_PITUUS_KUOLEMA);
             // tuhotaan perivän koodissa määritetty osuus tai sitten ei voida periä ollenkaan...
-            if (this.destroyerFunction) {
-                this.destroyerFunction();
+            if (this.onDestructFunction) {
+                this.onDestructFunction();
             }
             this.#removeInstantly();
         })();
@@ -231,11 +249,11 @@ class FormHenkiloa extends BaseFormi {
             return;
         }
 
-        this.destroyerFunction = null;  // tätä ei tarvita nyt
+        this.onDestructFunction = null;  // tätä ei tarvita nyt
         document.getElementById("tietojenMuokkaus").classList.remove("piilossa");
 
         const html =
-            '<form class="ikkuna" action="">' +
+            '<form class="ikkuna" action="" onsubmit="return false;">' +
             '    <label class="forminRivi" id="labelForEtun" for="etun">Etunimet:</label>' +
             '    <label class="forminRivi" id="labelForSukun" for="sukun">Sukunimet:</label>' +
             '    <span class="forminRivi" id="spanForTallennaKumoa" />' +
@@ -251,7 +269,9 @@ class FormHenkiloa extends BaseFormi {
         this.tallennaNappi.up("Tallenna", "forminNappi", "tallennaHenkilo");
         this.kumoaNappi.up("Kumoa", "forminNappi", "kumoaHenkilo");
 
-        kytkeNappaimienKuuntelija(false);  // muut näppäinkuuntelijat pois, koska syötetään nimiä yms
+        this.onConstructFunction = () => {
+            this.etunimetKentta.underlyingElement.focus();
+        };
     }
 
     _downSupplement(forceRemove = false) {
@@ -273,16 +293,85 @@ class FormHenkiloa extends BaseFormi {
         document.getElementById("labelForSukun").remove();
         document.getElementById("spanForTallennaKumoa").remove();
 
-        kytkeNappaimienKuuntelija(true);  // muut näppäinkuuntelijat taas sallittuja
-
-        this.destroyerFunction = () => {
+        this.onDestructFunction = () => {
             document.getElementById("tietojenMuokkaus").classList.add("piilossa");
         };
     }
 }
 
 class FormSuhdetta extends BaseFormi {
-    // implement tuon toisen jälkeen!
+
+    /**
+     * Tee tämä myöhemmin UUDESTAAN, vasta kun henkilönmuokkaus oikeasti valmis!
+     * Tähän logiikkaan tulee taatusti jotain muutoksia vielä!
+     */
+
+    #inputListener;
+    #buttonListener;
+    nimikeKentta;
+    tallennaNappi;
+    kumoaNappi;
+
+    /**
+     * 
+     * @param {EventListener} inputListener 
+     * @param {EventListener} buttonListener
+     * @param {Element} containingElement 
+     */
+    constructor(inputListener, buttonListener, containingElement) {
+        super(containingElement);
+        this.#inputListener = inputListener;
+        this.#buttonListener = buttonListener;
+        this.nimikeKentta = null;
+    }
+
+    up(itseOlio) {
+        if (this.isUp()) {
+            return;
+        }
+
+        this.onDestructFunction = null;
+        document.getElementById("tietojenMuokkaus").classList.remove("piilossa");
+
+        const html =
+            '<form class="ikkuna" action="" onsubmit="return false;">' +
+            '    <label class="forminRivi" id="labelForNimike" for="nimike">Suhteen nimike:</label>' +
+            '    <span class="forminRivi" id="spanForTallennaKumoa" />' +
+            '</form>';
+        this._attach(html);
+
+        this.nimikeKentta = new InputKentta(this.#inputListener, "input", document.getElementById("labelForNimike"));
+        this.tallennaNappi = new InputNappula(this.#buttonListener, "click", document.getElementById("spanForTallennaKumoa"));
+        this.kumoaNappi = new InputNappula(this.#buttonListener, "click", document.getElementById("spanForTallennaKumoa"));
+        this.nimikeKentta.up("nimike", "forminKentta", itseOlio.suhdeTyyppi.nimike);
+        this.tallennaNappi.up("Tallenna", "forminNappi", "tallennaSuhde");
+        this.kumoaNappi.up("Kumoa", "forminNappi", "kumoaSuhde");
+
+        this.onConstructFunction = () => {
+            this.nimikeKentta.underlyingElement.focus();
+        };
+    }
+
+    _downSupplement(forceRemove = false) {
+        if (this._isBeingAnimated() && forceRemove === false) {  // poistutaan, koska pääsulkumetodikin tekee niin
+            return;
+        }
+
+        this.nimikeKentta.down();
+        this.tallennaNappi.down();
+        this.kumoaNappi.down();
+
+        this.nimikeKentta = null;
+        this.tallennaNappi = null;
+        this.kumoaNappi = null;
+
+        document.getElementById("labelForNimike").remove();
+        document.getElementById("spanForTallennaKumoa").remove();
+
+        this.onDestructFunction = () => {
+            document.getElementById("tietojenMuokkaus").classList.add("piilossa");
+        };
+    }
 }
 
 export { FormHenkiloa, FormSuhdetta };

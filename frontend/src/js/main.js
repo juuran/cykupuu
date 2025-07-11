@@ -35,31 +35,62 @@ function asetaKuuntelijat() {
         cykupuu.valitseSolmu();
     });
 
-    // hakukentän kuuntelijat
-    document.addEventListener("keydown", (e) => {
-        if (e.code === "Escape") {
-            if (cykupuu.muokkaaHenkiloa.isUp() || cykupuu.muokkaaSuhdetta.isUp()) {
-                cykupuu.muokkaaHenkiloa.down("kumottiin");
-                cykupuu.muokkaaSuhdetta.down();
-            } else if (cykupuu.hakuKentta.isUp()) {
-                cykupuu.laskeHakuKentta();
-            }
-        }
-        if (e.code === "KeyF" && (e.ctrlKey && e.shiftKey || e.ctrlKey && e.altKey || e.shiftKey && e.altKey)) {
-            cykupuu.nostaHakuKentta();
-        }
-    });
-
-    kytkeNappaimienKuuntelija(true);
+    kytkeNappaimienKuuntelija(true);  // joko hakukentänKuuntelija tai tavallinen näppäinkuuntelija
+    kytkeHakukentanKuuntelija(true);
+    kytkeForminNappaimienKuuntelija(false);
 }
 
 function kytkeNappaimienKuuntelija(paalle) {
     if (paalle) {
-        document.removeEventListener("keydown", nappaimienKuuntelija);
         document.addEventListener("keydown", nappaimienKuuntelija);
-    }
-    else {
+    } else {
         document.removeEventListener("keydown", nappaimienKuuntelija);
+    }
+}
+
+function kytkeHakukentanKuuntelija(paalle) {
+    if (paalle) {
+        document.addEventListener("keydown", hakukentanKuuntelija);
+    } else {
+        document.removeEventListener("keydown", hakukentanKuuntelija);
+    }
+}
+
+function kytkeForminNappaimienKuuntelija(paalle) {
+    if (paalle) {
+        document.addEventListener("keydown", forminNappaimienKuuntelija);
+    } else {
+        document.removeEventListener("keydown", forminNappaimienKuuntelija);
+    }
+}
+
+function hakukentanKuuntelija(e) {
+    if (e.code === "Escape") {
+        if (cykupuu.hakuKentta.isUp()) {
+            cykupuu.laskeHakuKentta();
+        }
+    }
+    if (e.code === "KeyF" && (e.ctrlKey && e.shiftKey || e.ctrlKey && e.altKey || e.shiftKey && e.altKey)) {
+        cykupuu.nostaHakuKentta();
+    }
+}
+
+function forminNappaimienKuuntelija(event) {
+    if (event.code === "Enter") {
+        if (cykupuu.muokkaaHenkiloa.isUp()) {
+            cykupuu.muokkaaHenkiloa.tallennaNappi.underlyingElement.click();
+        }
+        if (cykupuu.muokkaaSuhdetta.isUp()) {
+            cykupuu.muokkaaSuhdetta.tallennaNappi.underlyingElement.click();
+        }
+    }
+    if (event.code === "Escape") {
+        if (cykupuu.muokkaaHenkiloa.isUp()) {
+            cykupuu.muokkaaHenkiloa.kumoaNappi.underlyingElement.click();
+        }
+        else if (cykupuu.muokkaaSuhdetta.isUp()) {
+            cykupuu.muokkaaSuhdetta.kumoaNappi.underlyingElement.click();
+        }
     }
 }
 
@@ -256,4 +287,4 @@ window.onload = async () => {
     main();
 };
 
-export { kytkeNappaimienKuuntelija, Cykupuu, synkronoiMuutokset, getSuhteet, getHenkilot };
+export { Cykupuu, synkronoiMuutokset, getSuhteet, getHenkilot, kytkeNappaimienKuuntelija, kytkeForminNappaimienKuuntelija as kytkeFormiEntterinKuuntelija, kytkeHakukentanKuuntelija };

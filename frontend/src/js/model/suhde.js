@@ -1,3 +1,8 @@
+import { getHenkilot } from "../main.js";
+
+/**
+ * Suhdetta kuvaava ja pitkälti tietokantaa vastaava luokka.
+ */
 class Suhde {
 
     id;
@@ -26,25 +31,52 @@ class Suhde {
     }
 
     toString() {
-        let vanhTeksti = "{";
-        for (const vanhempi of this.ylavirtaLiitokset) {
-            vanhTeksti = vanhTeksti + " " + vanhempi.etunimet + "; ";
-        }
-        vanhTeksti = vanhTeksti + "}";
-        let lapsTeksti = "{ ";
-        for (const lapsi of this.alavirtaLiitokset) {
-            lapsTeksti = lapsTeksti + " " + lapsi.etunimet + "; ";
-        }
-        lapsTeksti = lapsTeksti + "}";
+        const henkilot = getHenkilot();
 
-        return `${vanhTeksti} --> ${lapsTeksti}`;
+        let vanhTeksti = "{";
+        if (this.ylavirtaLiitokset.length > 0) {
+            for (const vanhempi of this.ylavirtaLiitokset) {
+                const henkId = vanhempi.id.henkiloId;  // henkilön tunniste henkilot "mapissa" (perus object)
+                const vanhemmanEkaEtunimi = henkilot[henkId].etunimet.split(" ")[0];
+                vanhTeksti = vanhTeksti + vanhemmanEkaEtunimi + ", ";
+            }
+            vanhTeksti = vanhTeksti.substring(0, vanhTeksti.length - 2);
+            vanhTeksti = vanhTeksti + "}";
+        } else {
+            vanhTeksti += "?}";
+        }
+
+        let lapsTeksti = "{";
+        if (this.alavirtaLiitokset.length > 0) {
+            for (const lapsi of this.alavirtaLiitokset) {
+                const henkId = lapsi.id.henkiloId;
+                const lapsenEkaEtunimi = henkilot[henkId].etunimet.split(" ")[0];
+                lapsTeksti = lapsTeksti + lapsenEkaEtunimi + ", ";
+            }
+            lapsTeksti = lapsTeksti.substring(0, lapsTeksti.length - 2);
+            lapsTeksti = lapsTeksti + "}";
+        } else {
+            lapsTeksti = null;
+        }
+
+        return lapsTeksti ? `${vanhTeksti}-->${lapsTeksti}` : `${vanhTeksti}`;
     }
 
     getNakyvaNimi() {
         if (this.suhdeTyyppi.nimike === "avioliitto") {
-            return "⛪";
-        } else if (this.suhdeTyyppi.nimike === "avoliitto") {
-            return "🏢";
+            return "❤️⛪";
+        }
+        else if (this.suhdeTyyppi.nimike === "avoliitto") {
+            return "❤️";
+        }
+        else if (this.suhdeTyyppi.nimike === "eronnut") {
+            return "💔";
+        }
+        else if (this.suhdeTyyppi.nimike === "polygamia") {
+            return "💕";
+        }
+        else if (this.suhdeTyyppi.nimike === "") {
+            return "💕";
         }
         else {
             return `${this.suhdeTyyppi.nimike} (${this.id})`;
@@ -131,7 +163,7 @@ function luoSuhdeSolmutJaKaaret(suhteet) {
             scratch: {
                 _itse: {
                     suhde: suhde,
-                    toString: () => suhde.toString() + (suhde.ryhma ? `(r=${suhde.ryhma})` : "")
+                    toString: () => suhde.toString()
                 }
             }
         });
